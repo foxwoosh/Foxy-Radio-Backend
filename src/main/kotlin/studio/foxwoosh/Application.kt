@@ -26,7 +26,11 @@ fun main() {
         }
     }
 
-    embeddedServer(Netty, port = 8080, host = "foxy-radio.herokuapp.com") {
+    embeddedServer(
+        Netty,
+        port = System.getenv("PORT").toInt(),
+        host = "0.0.0.0"
+    ) {
         configureRouting()
         configureSockets(
             getId = {
