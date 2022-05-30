@@ -10,7 +10,7 @@ fun Application.configureRouting() {
 
     routing {
         get("/") {
-            call.respondText("Hello World!")
+            call.respondText("Foxy Radio WS home EZ")
         }
         get("/cock") {
             call.respondText {

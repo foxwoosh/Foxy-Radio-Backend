@@ -1,17 +1,15 @@
 package studio.foxwoosh
 
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.serialization.json.Json
-import studio.foxwoosh.client_responses.UniqueIdResponse
 import studio.foxwoosh.plugins.configureRouting
 import studio.foxwoosh.plugins.configureSockets
+import studio.foxwoosh.ultra.ultraWebsocketRouting
 
 fun main() {
     val client = HttpClient(CIO) {
@@ -29,21 +27,10 @@ fun main() {
     embeddedServer(
         Netty,
         port = System.getenv("PORT").toInt(),
-        host = System.getenv("HOST")
     ) {
         configureRouting()
-        configureSockets(
-            getId = {
-                client
-                    .get("https://meta.fmgid.com/stations/ultra/id.json")
-                    .body<UniqueIdResponse>()
-                    .uniqueID
-            },
-            getData = {
-                client
-                    .get("https://meta.fmgid.com/stations/ultra/current.json")
-                    .body()
-            }
-        )
+        configureSockets()
+
+        ultraWebsocketRouting(client)
     }.start(wait = true)
 }

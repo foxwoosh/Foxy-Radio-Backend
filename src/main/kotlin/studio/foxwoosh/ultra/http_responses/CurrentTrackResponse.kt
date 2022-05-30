@@ -1,4 +1,4 @@
-package studio.foxwoosh.client_responses
+package studio.foxwoosh.ultra.http_responses
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
