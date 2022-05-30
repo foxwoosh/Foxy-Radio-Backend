@@ -1,1 +1,1 @@
-web: ./build/install/Foxy-Radio-Backend/bin/Foxy-Radio-Backend
+web: ./build/install/studio.foxwoosh.foxy-radio/bin/studio.foxwoosh.foxy-radio

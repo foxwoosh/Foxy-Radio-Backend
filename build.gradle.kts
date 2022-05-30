@@ -5,7 +5,7 @@ val logback_version: String by project
 plugins {
     application
     kotlin("jvm") version "1.6.21"
-    kotlin("plugin.serialization") version "1.4.21"
+    kotlin("plugin.serialization") version "1.6.21"
 }
 
 group = "studio.foxwoosh"
@@ -37,6 +37,6 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }
 
-tasks {
-    create("stage").dependsOn("installDist")
+tasks.create("stage") {
+    dependsOn("installDist")
 }
