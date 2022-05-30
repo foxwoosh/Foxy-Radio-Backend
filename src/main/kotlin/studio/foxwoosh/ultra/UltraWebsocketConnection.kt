@@ -14,6 +14,7 @@ import kotlinx.serialization.json.Json
 import studio.foxwoosh.sendText
 import studio.foxwoosh.ultra.http_responses.CurrentTrackResponse
 import studio.foxwoosh.ultra.http_responses.UniqueIdResponse
+import studio.foxwoosh.ultra.socket_incomes.SocketIncome
 import java.util.*
 import kotlin.collections.LinkedHashSet
 
@@ -40,13 +41,13 @@ fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
                 pollingJob = pollingJob(
                     getId = {
                         httpClient
-                            .get("https://meta.fmgid.com/stations/ultra/id.json")
+                            .get("https://meta.fmgid.com/stations/ultra/id.json?t=${System.currentTimeMillis()}")
                             .body<UniqueIdResponse>()
                             .uniqueID
                     },
                     fetch = {
                         val data = httpClient
-                            .get("https://meta.fmgid.com/stations/ultra/current.json")
+                            .get("https://meta.fmgid.com/stations/ultra/current.json?t=${System.currentTimeMillis()}")
                             .body<CurrentTrackResponse>()
                         lastFetchedData = data
 
@@ -61,13 +62,14 @@ fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
             try {
                 for (frame in incoming) {
                     val text = (frame as? Frame.Text?)?.readText() ?: continue
+                    val income = Json.decodeFromString<SocketIncome>(text)
 
-                    when {
-                        text.startsWith("subscribe") -> {
-                            connection.clientInfo = text.substringAfter("=")
+                    when (income.type) {
+                        SocketIncome.Type.SUBSCRIBE -> {
+                            connection.clientInfo = income["info"]
                             println("Client subscribed to connection ${connection.id} with info ${connection.clientInfo}")
                         }
-                        text.startsWith("unsubscribe") -> {
+                        SocketIncome.Type.UNSUBSCRIBE -> {
                             println("Client unsubscribed from connection ${connection.id}")
                             close(CloseReason(CloseReason.Codes.NORMAL, "Client said BYE"))
                         }
@@ -76,11 +78,11 @@ fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
             } catch (e: Exception) {
                 println("Error: ${e.message}")
             } finally {
-                println("Finally!")
                 if (removeConnection(connections, connection)) {
                     println("Stop polling")
                     pollingJob?.cancel()
                     pollingJob = null
+                    lastFetchedData = null
                 }
             }
         }

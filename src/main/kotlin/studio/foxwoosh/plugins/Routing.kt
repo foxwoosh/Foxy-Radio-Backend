@@ -27,5 +27,8 @@ fun Application.configureRouting() {
                 sb.toString()
             }
         }
+        get("/raven") {
+            call.respondText("Ну здарова равен, че зыришь блять")
+        }
     }
 }
