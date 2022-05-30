@@ -29,7 +29,7 @@ fun main() {
     embeddedServer(
         Netty,
         port = System.getenv("PORT").toInt(),
-        host = "0.0.0.0"
+        host = System.getenv("HOST")
     ) {
         configureRouting()
         configureSockets(
