@@ -48,10 +48,14 @@ fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
                             .uniqueID
                     },
                     fetch = {
-                        val data = httpClient
-                            .get("https://meta.fmgid.com/stations/ultra/current.json?t=${System.currentTimeMillis()}")
-                            .body<CurrentTrackResponse>()
-                        lastFetchedData = UltraSocketOutcome(UltraSocketOutcomeType.SONG_DATA, data)
+                        val data =
+                            UltraSocketOutcome(
+                                UltraSocketOutcomeType.SONG_DATA,
+                                httpClient
+                                    .get("https://meta.fmgid.com/stations/ultra/current.json?t=${System.currentTimeMillis()}")
+                                    .body<CurrentTrackResponse>()
+                            )
+                        lastFetchedData = data
 
                         val string = Json.encodeToString(data)
                         println("sending: \n $string")
