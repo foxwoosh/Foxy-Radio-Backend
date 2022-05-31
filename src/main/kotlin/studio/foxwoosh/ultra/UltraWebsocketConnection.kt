@@ -15,6 +15,8 @@ import studio.foxwoosh.sendText
 import studio.foxwoosh.ultra.http_responses.CurrentTrackResponse
 import studio.foxwoosh.ultra.http_responses.UniqueIdResponse
 import studio.foxwoosh.ultra.socket_incomes.SocketIncome
+import studio.foxwoosh.ultra.socket_outcomes.UltraSocketOutcome
+import studio.foxwoosh.ultra.socket_outcomes.UltraSocketOutcomeType
 import java.util.*
 import kotlin.collections.LinkedHashSet
 
@@ -24,7 +26,7 @@ private val ultraPollingScope = object : CoroutineScope {
 
 fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
     var pollingJob: Job? = null
-    var lastFetchedData: CurrentTrackResponse? = null
+    var lastFetchedData: UltraSocketOutcome<CurrentTrackResponse>? = null
 
     routing {
         val connections = Collections.synchronizedSet<Connection?>(LinkedHashSet())
@@ -49,7 +51,7 @@ fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
                         val data = httpClient
                             .get("https://meta.fmgid.com/stations/ultra/current.json?t=${System.currentTimeMillis()}")
                             .body<CurrentTrackResponse>()
-                        lastFetchedData = data
+                        lastFetchedData = UltraSocketOutcome(UltraSocketOutcomeType.SONG_DATA, data)
 
                         val string = Json.encodeToString(data)
                         println("sending: \n $string")
