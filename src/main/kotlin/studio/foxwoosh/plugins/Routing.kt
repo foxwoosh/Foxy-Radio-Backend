@@ -5,6 +5,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.request.*
+import kotlin.math.absoluteValue
 
 fun Application.configureRouting() {
 
@@ -14,21 +15,22 @@ fun Application.configureRouting() {
         }
         get("/cock") {
             call.respondText {
-                val size = call.request.queryParameters["size"]?.toInt() ?: 0
+                try {
+                    val size = call.request.queryParameters["size"]?.toInt()!!.absoluteValue
 
-                val sb = StringBuilder("8")
+                    val sb = StringBuilder("8")
 
-                for (i in 0..size) {
-                    sb.append("=")
+                    for (i in 0..size) {
+                        sb.append("=")
+                    }
+
+                    sb.append("3")
+
+                    sb.toString()
+                } catch (e: Exception) {
+                    "Liar with a small cock -> 8-"
                 }
-
-                sb.append("3")
-
-                sb.toString()
             }
-        }
-        get("/raven") {
-            call.respondText("Ну здарова равен, че зыришь блять")
         }
     }
 }

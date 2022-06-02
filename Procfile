@@ -1,1 +1,0 @@
-web: ./build/install/studio.foxwoosh.foxy-radio/bin/studio.foxwoosh.foxy-radio
