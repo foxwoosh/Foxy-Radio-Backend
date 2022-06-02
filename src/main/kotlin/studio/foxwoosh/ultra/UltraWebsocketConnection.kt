@@ -14,9 +14,11 @@ import kotlinx.serialization.json.Json
 import studio.foxwoosh.sendText
 import studio.foxwoosh.ultra.http_responses.CurrentTrackResponse
 import studio.foxwoosh.ultra.http_responses.UniqueIdResponse
+import studio.foxwoosh.ultra.mappers.map
 import studio.foxwoosh.ultra.socket_incomes.SocketIncome
 import studio.foxwoosh.ultra.socket_outcomes.UltraSocketOutcome
 import studio.foxwoosh.ultra.socket_outcomes.UltraSocketOutcomeType
+import studio.foxwoosh.ultra.socket_outcomes.UltraSongDataSocketOutcome
 import java.util.*
 import kotlin.collections.LinkedHashSet
 
@@ -26,7 +28,7 @@ private val ultraPollingScope = object : CoroutineScope {
 
 fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
     var pollingJob: Job? = null
-    var lastFetchedData: UltraSocketOutcome<CurrentTrackResponse>? = null
+    var lastFetchedData: UltraSocketOutcome<UltraSongDataSocketOutcome>? = null
 
     routing {
         val connections = Collections.synchronizedSet<Connection?>(LinkedHashSet())
@@ -34,12 +36,11 @@ fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
         webSocket("/ultra") {
             val connection = Connection(this)
             lastFetchedData?.let {
-                println("Sending last fetched Ultra data to client ${connection.id}")
+                println("ULTRA: send last fetched to client: ${connection.id}")
                 outgoing.sendText(Json.encodeToString(it))
             }
 
             if (addConnection(connections, connection) && pollingJob?.isActive != true) {
-                println("Starting polling")
                 pollingJob = pollingJob(
                     getId = {
                         httpClient
@@ -48,19 +49,16 @@ fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
                             .uniqueID
                     },
                     fetch = {
-                        val data =
-                            UltraSocketOutcome(
-                                UltraSocketOutcomeType.SONG_DATA,
-                                httpClient
-                                    .get("https://meta.fmgid.com/stations/ultra/current.json?t=${System.currentTimeMillis()}")
-                                    .body<CurrentTrackResponse>()
-                            )
-                        lastFetchedData = data
+                        val response = httpClient
+                            .get("https://meta.fmgid.com/stations/ultra/current.json?t=${System.currentTimeMillis()}")
+                            .body<CurrentTrackResponse>()
 
-                        val string = Json.encodeToString(data)
-                        println("sending: \n $string")
+                        lastFetchedData = response.map().also { data ->
+                            val dataString = Json.encodeToString(data)
+                            println("ULTRA: sending track data - ${data.data.title} by ${data.data.artist}")
 
-                        connections.forEach { it.session.outgoing.sendText(string) }
+                            connections.forEach { it.session.outgoing.sendText(dataString) }
+                        }
                     }
                 )
             }
@@ -73,19 +71,19 @@ fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
                     when (income.type) {
                         SocketIncome.Type.SUBSCRIBE -> {
                             connection.clientInfo = income["info"]
-                            println("Client subscribed to connection ${connection.id} with info ${connection.clientInfo}")
+                            println("ULTRA: client subscribed to connection ${connection.id} with info ${connection.clientInfo}")
                         }
                         SocketIncome.Type.UNSUBSCRIBE -> {
-                            println("Client unsubscribed from connection ${connection.id}")
+                            println("ULTRA: client unsubscribed from connection ${connection.id}")
                             close(CloseReason(CloseReason.Codes.NORMAL, "Client said BYE"))
                         }
                     }
                 }
             } catch (e: Exception) {
-                println("Error: ${e.message}")
+                println("ULTRA: socket error, ${e.message}")
             } finally {
                 if (removeConnection(connections, connection)) {
-                    println("Stop polling")
+                    println("ULTRA: polling stopped")
                     pollingJob?.cancel()
                     pollingJob = null
                     lastFetchedData = null
@@ -100,7 +98,7 @@ fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
  */
 private fun addConnection(connections: MutableSet<Connection>, connection: Connection): Boolean {
     connections.add(connection)
-    println("Added connection. Count = ${connections.size}")
+    println("ULTRA: added connection, count = ${connections.size}")
     return connections.size == 1
 }
 
@@ -110,7 +108,7 @@ private fun addConnection(connections: MutableSet<Connection>, connection: Conne
 
 private fun removeConnection(connections: MutableSet<Connection>, connection: Connection): Boolean {
     connections.remove(connection)
-    println("Removed connection. Count = ${connections.size}")
+    println("ULTRA: removed connection, count = ${connections.size}")
     return connections.isEmpty()
 }
 
@@ -118,7 +116,7 @@ private fun pollingJob(
     getId: suspend () -> String,
     fetch: suspend () -> Unit
 ) = ultraPollingScope.launch {
-    println("Ultra polling started")
+    println("ULTRA: polling started")
 
     var currentUniqueID: String? = null
 
@@ -127,12 +125,12 @@ private fun pollingJob(
             val fetchedUniqueID = getId()
 
             if (fetchedUniqueID != currentUniqueID) {
-                println("Fetching Ultra track")
+                println("ULTRA: fetching track")
                 fetch()
                 currentUniqueID = fetchedUniqueID
             }
         } catch (e: Exception) {
-            println("error, ${e.message}")
+            println("ULTRA: fetching failed, ${e.message}")
         }
 
         delay(10000)
