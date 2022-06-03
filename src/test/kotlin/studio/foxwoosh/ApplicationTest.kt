@@ -22,7 +22,7 @@ class ApplicationTest {
         }
         client.get("/").apply {
             assertEquals(HttpStatusCode.OK, status)
-            assertEquals("Hello World!", bodyAsText())
+            assertEquals("Foxy Radio WS home EZ", bodyAsText())
         }
     }
 }
