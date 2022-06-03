@@ -38,13 +38,13 @@ dependencies {
 }
 
 val fatJar = task("fatJar", type = Jar::class) {
-    baseName = "${project.name}-fat"
+    archiveBaseName.set("${project.name}-fat")
     manifest {
         attributes["Implementation-Title"] = "Foxy Radio WS home EZ"
-        attributes["Implementation-Version"] = version
+        attributes["Implementation-Version"] = archiveVersion.getOrElse("0.0.1")
         attributes["Main-Class"] = "studio.foxwoosh.ApplicationKt"
     }
-    from(configurations.runtimeClasspath.get().map({ if (it.isDirectory) it else zipTree(it) }))
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
     with(tasks.jar.get() as CopySpec)
     exclude("META-INF/*.RSA", "META-INF/*.SF", "META-INF/*.DSA", "META-INF/INDEX.LIST")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
