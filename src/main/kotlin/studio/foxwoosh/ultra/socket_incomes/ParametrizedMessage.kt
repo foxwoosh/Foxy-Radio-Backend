@@ -1,7 +1,9 @@
 package studio.foxwoosh.ultra.socket_incomes
 
-@kotlinx.serialization.Serializable
-data class SocketIncome(
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class ParametrizedMessage(
     val type: Type,
     val params: Map<String, String>?
 ) {

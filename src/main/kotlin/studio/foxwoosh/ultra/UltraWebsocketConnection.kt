@@ -15,10 +15,9 @@ import studio.foxwoosh.sendText
 import studio.foxwoosh.ultra.http_responses.CurrentTrackResponse
 import studio.foxwoosh.ultra.http_responses.UniqueIdResponse
 import studio.foxwoosh.ultra.mappers.map
-import studio.foxwoosh.ultra.socket_incomes.SocketIncome
-import studio.foxwoosh.ultra.socket_outcomes.UltraSocketOutcome
-import studio.foxwoosh.ultra.socket_outcomes.UltraSocketOutcomeType
-import studio.foxwoosh.ultra.socket_outcomes.UltraSongDataSocketOutcome
+import studio.foxwoosh.ultra.socket_incomes.ParametrizedMessage
+import studio.foxwoosh.ultra.messages.UltraMessage
+import studio.foxwoosh.ultra.messages.UltraSongDataMessage
 import java.util.*
 import kotlin.collections.LinkedHashSet
 
@@ -28,13 +27,14 @@ private val ultraPollingScope = object : CoroutineScope {
 
 fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
     var pollingJob: Job? = null
-    var lastFetchedData: UltraSocketOutcome<UltraSongDataSocketOutcome>? = null
+    var lastFetchedData: UltraSongDataMessage? = null
 
     routing {
         val connections = Collections.synchronizedSet<Connection?>(LinkedHashSet())
 
         webSocket("/ultra") {
             val connection = Connection(this)
+
             lastFetchedData?.let {
                 println("ULTRA: send last fetched to client: ${connection.id}")
                 outgoing.sendText(Json.encodeToString(it))
@@ -55,7 +55,7 @@ fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
 
                         lastFetchedData = response.map().also { data ->
                             val dataString = Json.encodeToString(data)
-                            println("ULTRA: sending track data - ${data.data.title} by ${data.data.artist}")
+                            println("ULTRA: sending track data - ${data.title} by ${data.artist}")
 
                             connections.forEach { it.session.outgoing.sendText(dataString) }
                         }
@@ -66,16 +66,16 @@ fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
             try {
                 for (frame in incoming) {
                     val text = (frame as? Frame.Text?)?.readText() ?: continue
-                    val income = Json.decodeFromString<SocketIncome>(text)
+                    val income = Json.decodeFromString<ParametrizedMessage>(text)
 
                     when (income.type) {
-                        SocketIncome.Type.SUBSCRIBE -> {
+                        ParametrizedMessage.Type.SUBSCRIBE -> {
                             connection.clientInfo = income["info"]
                             println("ULTRA: client subscribed to connection ${connection.id} with info ${connection.clientInfo}")
                         }
-                        SocketIncome.Type.UNSUBSCRIBE -> {
+                        ParametrizedMessage.Type.UNSUBSCRIBE -> {
                             println("ULTRA: client unsubscribed from connection ${connection.id}")
-                            close(CloseReason(CloseReason.Codes.NORMAL, "Client said BYE"))
+                            close(CloseReason(CloseReason.Codes.NORMAL, "Unsubscribe"))
                         }
                     }
                 }
