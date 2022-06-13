@@ -1,6 +1,5 @@
 package studio.foxwoosh.ultra
 
-import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.server.application.*
@@ -10,22 +9,21 @@ import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import studio.foxwoosh.AppHttpClient
+import studio.foxwoosh.AppJson
 import studio.foxwoosh.sendText
-import studio.foxwoosh.ultra.http_responses.CurrentTrackResponse
-import studio.foxwoosh.ultra.http_responses.UniqueIdResponse
-import studio.foxwoosh.ultra.mappers.map
-import studio.foxwoosh.ultra.socket_incomes.ParametrizedMessage
-import studio.foxwoosh.ultra.messages.UltraMessage
+import studio.foxwoosh.ultra.client_responses.CurrentTrackResponse
+import studio.foxwoosh.ultra.client_responses.UniqueIdResponse
+import studio.foxwoosh.ultra.mappers.mapToMessage
 import studio.foxwoosh.ultra.messages.UltraSongDataMessage
+import studio.foxwoosh.ultra.socket_incomes.ParametrizedMessage
 import java.util.*
-import kotlin.collections.LinkedHashSet
 
 private val ultraPollingScope = object : CoroutineScope {
     override val coroutineContext = SupervisorJob() + Dispatchers.IO
 }
 
-fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
+fun Application.ultraWebsocketRouting() {
     var pollingJob: Job? = null
     var lastFetchedData: UltraSongDataMessage? = null
 
@@ -37,27 +35,30 @@ fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
 
             lastFetchedData?.let {
                 println("ULTRA: send last fetched to client: ${connection.id}")
-                outgoing.sendText(Json.encodeToString(it))
+
+                outgoing.sendText(AppJson.encodeToString(it))
             }
 
             if (addConnection(connections, connection) && pollingJob?.isActive != true) {
                 pollingJob = pollingJob(
                     getId = {
-                        httpClient
+                        AppHttpClient
                             .get("https://meta.fmgid.com/stations/ultra/id.json?t=${System.currentTimeMillis()}")
                             .body<UniqueIdResponse>()
                             .uniqueID
                     },
                     fetch = {
-                        val response = httpClient
+                        val response = AppHttpClient
                             .get("https://meta.fmgid.com/stations/ultra/current.json?t=${System.currentTimeMillis()}")
                             .body<CurrentTrackResponse>()
 
-                        lastFetchedData = response.map().also { data ->
-                            val dataString = Json.encodeToString(data)
+                        lastFetchedData = response.mapToMessage().also { data ->
+                            val dataString = AppJson.encodeToString(data)
                             println("ULTRA: sending track data - ${data.title} by ${data.artist}")
 
-                            connections.forEach { it.session.outgoing.sendText(dataString) }
+                            connections.forEach {
+                                it.session.outgoing.sendText(dataString)
+                            }
                         }
                     }
                 )
@@ -66,11 +67,11 @@ fun Application.ultraWebsocketRouting(httpClient: HttpClient) {
             try {
                 for (frame in incoming) {
                     val text = (frame as? Frame.Text?)?.readText() ?: continue
-                    val income = Json.decodeFromString<ParametrizedMessage>(text)
+                    val message = AppJson.decodeFromString<ParametrizedMessage>(text)
 
-                    when (income.type) {
+                    when (message.type) {
                         ParametrizedMessage.Type.SUBSCRIBE -> {
-                            connection.clientInfo = income["info"]
+                            connection.clientInfo = message["info"]
                             println("ULTRA: client subscribed to connection ${connection.id} with info ${connection.clientInfo}")
                         }
                         ParametrizedMessage.Type.UNSUBSCRIBE -> {
@@ -129,11 +130,13 @@ private fun pollingJob(
                 fetch()
                 currentUniqueID = fetchedUniqueID
             }
+
+            delay(10000)
         } catch (e: Exception) {
             println("ULTRA: fetching failed, ${e.message}")
-        }
 
-        delay(10000)
+            delay(5000)
+        }
     }
 }
 

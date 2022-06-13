@@ -7,11 +7,14 @@ import kotlinx.serialization.Serializable
 data class UltraSongDataMessage(
     @SerialName("type") override val type: UltraMessageType,
     @SerialName("id") val id: String,
-    @SerialName("album") val album: String? = null,
-    @SerialName("artist") val artist: String,
-    @SerialName("cover") val cover: String,
-    @SerialName("root") val root: String,
     @SerialName("title") val title: String,
+    @SerialName("artist") val artist: String,
+    @SerialName("album") val album: String? = null,
+    @SerialName("cover") val cover: String,
+    @SerialName("date") val date: String,
+    @SerialName("time") val time: String,
+    @SerialName("root") val root: String,
+    @SerialName("metadata") val metadata: String,
     @SerialName("itunes_url") val iTunesUrl: String?,
     @SerialName("spotify_url") val spotifyUrl: String?,
     @SerialName("yamusic_url") val yandexMusicUrl: String?,
@@ -21,9 +24,11 @@ data class UltraSongDataMessage(
 ) : UltraMessage {
     @Serializable
     data class PreviousTrack(
+        @SerialName("title") val title: String,
         @SerialName("artist") val artist: String,
         @SerialName("cover") val cover: String,
-        @SerialName("title") val title: String,
+        @SerialName("date") val date: String,
+        @SerialName("time") val time: String,
         @SerialName("itunes_url") val itunesUrl: String?,
         @SerialName("spotify_url") val spotifyUrl: String?,
         @SerialName("yamusic_url") val yandexMusicUrl: String?,

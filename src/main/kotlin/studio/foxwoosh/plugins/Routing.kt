@@ -1,35 +1,20 @@
 package studio.foxwoosh.plugins
 
-import io.ktor.server.routing.*
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
-import io.ktor.server.request.*
-import kotlin.math.absoluteValue
+import io.ktor.server.routing.*
+import kotlinx.serialization.encodeToString
+import studio.foxwoosh.AppJson
+import studio.foxwoosh.http_responses.LyricsResponse
 
 fun Application.configureRouting() {
-
     routing {
-        get("/") {
-            call.respondText("Foxy Radio WS home EZ")
-        }
-        get("/cock") {
+        get("/lyrics") {
             call.respondText {
-                try {
-                    val size = call.request.queryParameters["size"]?.toInt()!!.absoluteValue
+                val artist = call.request.queryParameters["artist"] ?: ""
+                val title = call.request.queryParameters["title"] ?: ""
 
-                    val sb = StringBuilder("8")
-
-                    for (i in 0..size) {
-                        sb.append("=")
-                    }
-
-                    sb.append("3")
-
-                    sb.toString()
-                } catch (e: Exception) {
-                    "Liar with a small cock -> 8-"
-                }
+                AppJson.encodeToString(LyricsResponse("no lyrics available"))
             }
         }
     }

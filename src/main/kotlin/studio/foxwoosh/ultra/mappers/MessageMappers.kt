@@ -1,11 +1,11 @@
 package studio.foxwoosh.ultra.mappers
 
-import studio.foxwoosh.ultra.http_responses.CurrentTrackResponse
-import studio.foxwoosh.ultra.http_responses.PreviousTrackResponse
+import studio.foxwoosh.ultra.client_responses.CurrentTrackResponse
+import studio.foxwoosh.ultra.client_responses.PreviousTrackResponse
 import studio.foxwoosh.ultra.messages.UltraMessageType
 import studio.foxwoosh.ultra.messages.UltraSongDataMessage
 
-fun CurrentTrackResponse.map() = UltraSongDataMessage(
+fun CurrentTrackResponse.mapToMessage() = UltraSongDataMessage(
     UltraMessageType.SONG_DATA,
     id = uniqueID,
     album = album,
@@ -18,13 +18,18 @@ fun CurrentTrackResponse.map() = UltraSongDataMessage(
     yandexMusicUrl = yandexMusicUrl,
     youtubeUrl = youtubeUrl,
     youtubeMusicUrl = youtubeMusicUrl,
-    previousTracks = previousTracks.map { it.map() }
+    date = date,
+    time = time,
+    metadata = metadata,
+    previousTracks = previousTracks.map { it.mapToMessage() }
 )
 
-fun PreviousTrackResponse.map() = UltraSongDataMessage.PreviousTrack(
+fun PreviousTrackResponse.mapToMessage() = UltraSongDataMessage.PreviousTrack(
     artist = artist,
     cover = coverWebp,
     title = title,
+    date = date,
+    time = time,
     itunesUrl = itunesUrl,
     spotifyUrl = spotifyUrl,
     yandexMusicUrl = yandexMusicUrl,
