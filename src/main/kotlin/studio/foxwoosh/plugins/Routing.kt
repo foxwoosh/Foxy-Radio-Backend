@@ -10,8 +10,7 @@ import studio.foxwoosh.AppJson
 import studio.foxwoosh.http_responses.LyricsResponse
 
 fun Application.configureRouting() {
-    var foundLyrics = 0
-    var notFoundLyrics = 0
+    val cachedLyrics = HashMap<String, String>()
 
     routing {
         get("/lyrics") {
@@ -19,16 +18,19 @@ fun Application.configureRouting() {
                 val artist = call.request.queryParameters["artist"] ?: ""
                 val title = call.request.queryParameters["title"] ?: ""
 
+                val cacheKey = "$artist - $title"
+
                 val lyrics = try {
-                    val lyrics = songMeanings(artist, title)
-                    foundLyrics++
-                    lyrics
+                    val cached = cachedLyrics[cacheKey]
+
+                    if (cached.isNullOrEmpty()) {
+                        songMeanings(artist, title).also {
+                            cachedLyrics[cacheKey] = it
+                        }
+                    } else cached
                 } catch (e: Exception) {
-                    notFoundLyrics++
                     ""
                 }
-
-                println("LYRICS: this session found: $foundLyrics, not found: $notFoundLyrics")
 
                 AppJson.encodeToString(LyricsResponse(lyrics))
             }
@@ -42,11 +44,8 @@ private fun songMeanings(artist: String, title: String): String {
 
     val searchPage = Jsoup.connect(url).get()
 
-    val lyricsUrl = searchPage.select("a[style][href][title]")
-        .first {
-            val elementTitle = it.attr("title")
-            elementTitle.contains(title, ignoreCase = true) || title.contains(elementTitle, ignoreCase = true)
-        }
+    val lyricsUrl = searchPage.select("a[style][class][href][title]")
+        .first { it.attr("href").contains("songmeanings.com/songs/view") }
         .attr("href")
 
     val lyricsPage = Jsoup.connect("https:$lyricsUrl").get()
