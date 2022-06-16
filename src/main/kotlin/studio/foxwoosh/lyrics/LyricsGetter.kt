@@ -44,16 +44,17 @@ fun Application.installLyricsGetter() {
                         lyrics = try {
                             // first try
                             findLyricsOnline(artist, title).also {
-                                println("LYRICS: saved lyrics for original - $title by $artist")
+                                println("LYRICS: saved-O")
                                 LyricsDao.save(artist, title, it)
                             }
                         } catch (e: Exception) {
                             try {
                                 findLyricsOnline(fixedArtist, fixedTitle).also {
-                                    println("LYRICS: saved lyrics for fixed - $title by $artist")
+                                    println("LYRICS: saved-F")
                                     LyricsDao.save(fixedArtist, fixedTitle, it)
                                 }
                             } catch (e: Exception) {
+                                println("LYRICS: no lyrics found for $title by $artist")
                                 ""
                             }
                         }
