@@ -6,7 +6,7 @@ import io.ktor.server.websocket.*
 import studio.foxwoosh.AppJson
 import java.time.Duration
 
-fun Application.configureSockets() {
+fun Application.installSocket() {
     install(WebSockets) {
         pingPeriod = Duration.ofSeconds(15)
         timeout = Duration.ofSeconds(15)

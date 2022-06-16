@@ -23,7 +23,7 @@ private val ultraPollingScope = object : CoroutineScope {
     override val coroutineContext = SupervisorJob() + Dispatchers.IO
 }
 
-fun Application.ultraWebsocketRouting() {
+fun Application.ultraWebsocket() {
     var pollingJob: Job? = null
     var lastFetchedData: UltraSongDataMessage? = null
 

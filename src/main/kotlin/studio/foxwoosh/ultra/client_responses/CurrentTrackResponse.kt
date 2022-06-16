@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CurrentTrackResponse(
     @SerialName("album") val album: String? = null,
-    @SerialName("artist") val artist: String,
+    @SerialName("artist") val artist: String?,
     @SerialName("cover") val cover: String,
     @SerialName("cover_webp") val coverWebp: String,
     @SerialName("date") val date: String,
@@ -16,7 +16,7 @@ data class CurrentTrackResponse(
     @SerialName("prev_tracks") val previousTracks: List<PreviousTrackResponse>,
     @SerialName("root") val root: String,
     @SerialName("time") val time: String,
-    @SerialName("title") val title: String,
+    @SerialName("title") val title: String?,
     @SerialName("uniqueid") val uniqueID: String,
     @SerialName("itunes_url") val iTunesUrl: String?,
     @SerialName("spotify_url") val spotifyUrl: String?,
