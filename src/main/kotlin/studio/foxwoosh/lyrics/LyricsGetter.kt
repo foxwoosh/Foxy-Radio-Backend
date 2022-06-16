@@ -44,11 +44,13 @@ fun Application.installLyricsGetter() {
                         lyrics = try {
                             // first try
                             findLyricsOnline(artist, title).also {
+                                println("LYRICS: saved lyrics for original - $title by $artist")
                                 LyricsDao.save(artist, title, it)
                             }
                         } catch (e: Exception) {
                             try {
                                 findLyricsOnline(fixedArtist, fixedTitle).also {
+                                    println("LYRICS: saved lyrics for fixed - $title by $artist")
                                     LyricsDao.save(fixedArtist, fixedTitle, it)
                                 }
                             } catch (e: Exception) {
@@ -72,12 +74,12 @@ private fun fixQuery(q: String) =
 
 private fun findLyricsOnline(artist: String, title: String): String {
     val query = "$artist $title".replace(" ", "+")
-    val url = "${System.getenv("LYRICS_URL")}/?query=$query&type=all"
+    val url = "https://${System.getenv("LYRICS_URL")}/query/?query=$query&type=all"
 
     val searchPage = Jsoup.connect(url).get()
 
     val lyricsUrl = searchPage.select("a[style][class][href][title]")
-        .first { it.attr("href").contains("songmeanings.com/songs/view") }
+        .first { it.attr("href").contains("${System.getenv("LYRICS_URL")}/songs/view") }
         .attr("href")
 
     val lyricsPage = Jsoup.connect("https:$lyricsUrl").get()
@@ -94,5 +96,5 @@ private fun findLyricsOnline(artist: String, title: String): String {
             .append("\n")
     }
 
-    return sb.toString()
+    return sb.toString().trim()
 }
