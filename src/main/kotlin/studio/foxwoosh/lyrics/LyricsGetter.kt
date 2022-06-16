@@ -20,16 +20,29 @@ fun Application.installLyricsGetter() {
                 if (artist.isNullOrEmpty() || title.isNullOrEmpty())
                     return@respondText AppJson.encodeToString(LyricsResponse.empty)
 
+                var lyrics = ""
+
                 val cachedOriginal = LyricsDao.get(artist, title)
-                val lyrics = if (cachedOriginal != null) {
-                    cachedOriginal.lyrics
+                if (cachedOriginal != null) {
+                    // try to find lyrics in database with original parameters
+                    lyrics = cachedOriginal.lyrics
                 } else {
+                    // if original wasn't found then try to find
+                    // with fixed parameters (without some symbols etc)
                     val fixedTitle = fixQuery(title)
                     val fixedArtist = fixQuery(artist)
 
-                    val cachedFixed = LyricsDao.get(fixedArtist, fixedTitle)
-                    cachedFixed?.lyrics
-                        ?: try {
+                    if (fixedTitle != title || fixedArtist != artist) {
+                        // try to look up database only if something was fixed in title or artist
+                        LyricsDao.get(fixedArtist, fixedTitle)?.let {
+                            lyrics = it.lyrics
+                        }
+                    }
+
+                    // if lyrics still empty it's time to look up online
+                    if (lyrics.isEmpty()) {
+                        lyrics = try {
+                            // first try
                             findLyricsOnline(artist, title).also {
                                 LyricsDao.save(artist, title, it)
                             }
@@ -42,6 +55,7 @@ fun Application.installLyricsGetter() {
                                 ""
                             }
                         }
+                    }
                 }
 
                 AppJson.encodeToString(LyricsResponse(lyrics))
@@ -58,7 +72,7 @@ private fun fixQuery(q: String) =
 
 private fun findLyricsOnline(artist: String, title: String): String {
     val query = "$artist $title".replace(" ", "+")
-    val url = "https://songmeanings.com/query/?query=$query&type=all"
+    val url = "${System.getenv("LYRICS_URL")}/?query=$query&type=all"
 
     val searchPage = Jsoup.connect(url).get()
 

@@ -1,6 +1,6 @@
 package studio.foxwoosh.database
 
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import studio.foxwoosh.database.dao.ILyricsDao
 import studio.foxwoosh.database.dao.LyricsDao
 import studio.foxwoosh.database.tables.Lyrics
+import java.util.concurrent.Executors
 
 object AppDatabase {
     fun init() {
@@ -28,7 +29,11 @@ object AppDatabase {
     }
 
     suspend fun <T> query(block: suspend () -> T): T =
-        newSuspendedTransaction(Dispatchers.IO) { block() }
+        newSuspendedTransaction(databaseDispatcher) { block() }
 }
+
+private val databaseDispatcher = Executors.newSingleThreadExecutor {
+    Thread(it, "Database Thread")
+}.asCoroutineDispatcher()
 
 val LyricsDao: ILyricsDao = LyricsDao()
