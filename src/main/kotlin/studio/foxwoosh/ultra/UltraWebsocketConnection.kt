@@ -2,6 +2,7 @@ package studio.foxwoosh.ultra
 
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
@@ -17,25 +18,31 @@ import studio.foxwoosh.ultra.client_responses.UniqueIdResponse
 import studio.foxwoosh.ultra.mappers.mapToMessage
 import studio.foxwoosh.ultra.messages.UltraSongDataMessage
 import studio.foxwoosh.ultra.socket_incomes.ParametrizedMessage
+import java.time.Duration
 import java.util.*
 
 private val ultraPollingScope = object : CoroutineScope {
     override val coroutineContext = SupervisorJob() + Dispatchers.IO
 }
 
-fun Application.ultraWebsocket() {
+fun Application.ultraWebsocket(connections: MutableSet<Connection>) {
+    install(WebSockets) {
+        pingPeriod = Duration.ofSeconds(15)
+        timeout = Duration.ofSeconds(15)
+        maxFrameSize = Long.MAX_VALUE
+        masking = false
+        contentConverter = KotlinxWebsocketSerializationConverter(AppJson)
+    }
+
     var pollingJob: Job? = null
     var lastFetchedData: UltraSongDataMessage? = null
 
     routing {
-        val connections = Collections.synchronizedSet<Connection?>(LinkedHashSet())
-
         webSocket("/ultra") {
             val connection = Connection(this)
 
             lastFetchedData?.let {
-                println("ULTRA: send last fetched to client: ${connection.id}")
-
+                println("ULTRA: send last fetched to new client")
                 outgoing.sendText(AppJson.encodeToString(it))
             }
 
@@ -54,7 +61,7 @@ fun Application.ultraWebsocket() {
 
                         lastFetchedData = response.mapToMessage().also { data ->
                             val dataString = AppJson.encodeToString(data)
-                            println("ULTRA: sending track data - ${data.title} by ${data.artist}")
+                            println("ULTRA: sending track data - ${data.title} - ${data.artist}")
 
                             connections.forEach {
                                 it.session.outgoing.sendText(dataString)
@@ -71,8 +78,7 @@ fun Application.ultraWebsocket() {
 
                     when (message.type) {
                         ParametrizedMessage.Type.SUBSCRIBE -> {
-                            connection.clientInfo = message["info"]
-                            println("ULTRA: client subscribed to connection ${connection.id} with info ${connection.clientInfo}")
+                            connection.clientInfo.putAll(message.params)
                         }
                         ParametrizedMessage.Type.UNSUBSCRIBE -> {
                             println("ULTRA: client unsubscribed from connection ${connection.id}")
@@ -133,9 +139,9 @@ private fun pollingJob(
 
             delay(10000)
         } catch (e: Exception) {
-            println("ULTRA: fetching failed, ${e.message}")
-
             delay(5000)
+            
+            println("ULTRA: fetching failed, ${e.message}")
         }
     }
 }

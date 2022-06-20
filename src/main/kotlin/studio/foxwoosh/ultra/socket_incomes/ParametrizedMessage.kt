@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ParametrizedMessage(
     val type: Type,
-    val params: Map<String, String>?
+    val params: Map<String, String>
 ) {
-    operator fun get(key: String) = params?.get(key)
+    operator fun get(key: String) = params[key]
 
     enum class Type {
         SUBSCRIBE, UNSUBSCRIBE

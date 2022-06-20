@@ -13,15 +13,11 @@ import java.util.concurrent.Executors
 object AppDatabase {
     fun init() {
         val url = "jdbc:postgresql://127.0.0.1:5432/${System.getenv("DB_NAME")}"
+        val driver = "org.postgresql.Driver"
         val user = System.getenv("DB_USER")
         val password = System.getenv("DB_PASSWORD")
 
-        Database.connect(
-            url,
-            "org.postgresql.Driver",
-            user,
-            password
-        )
+        Database.connect(url, driver, user, password)
 
         transaction {
             SchemaUtils.create(Lyrics)

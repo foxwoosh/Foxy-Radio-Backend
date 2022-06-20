@@ -2,10 +2,12 @@ package studio.foxwoosh
 
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import studio.foxwoosh.admin.installAdminProvider
 import studio.foxwoosh.database.AppDatabase
-import studio.foxwoosh.lyrics.installLyricsGetter
-import studio.foxwoosh.plugins.installSocket
+import studio.foxwoosh.lyrics.lyricsGetter
+import studio.foxwoosh.ultra.Connection
 import studio.foxwoosh.ultra.ultraWebsocket
+import java.util.*
 
 fun main() {
     embeddedServer(
@@ -13,11 +15,13 @@ fun main() {
         host = System.getenv("APP_HOST"),
         port = System.getenv("APP_PORT").toInt(),
     ) {
+        val connectionsHolder = Collections.synchronizedSet<Connection?>(LinkedHashSet())
+
         AppDatabase.init()
 
-        installLyricsGetter()
-        installSocket()
+        lyricsGetter()
+        ultraWebsocket(connectionsHolder)
 
-        ultraWebsocket()
+        installAdminProvider(connectionsHolder)
     }.start(wait = true)
 }

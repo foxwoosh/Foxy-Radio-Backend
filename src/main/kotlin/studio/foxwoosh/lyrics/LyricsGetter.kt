@@ -10,7 +10,7 @@ import studio.foxwoosh.AppJson
 import studio.foxwoosh.database.LyricsDao
 import studio.foxwoosh.http_responses.LyricsResponse
 
-fun Application.installLyricsGetter() {
+fun Application.lyricsGetter() {
     routing {
         get("/lyrics") {
             call.respondText {
@@ -42,18 +42,20 @@ fun Application.installLyricsGetter() {
                     // if lyrics still empty it's time to look up online
                     if (lyrics.isEmpty()) {
                         lyrics = try {
-                            // first try
+                            // first try with original data
                             findLyricsOnline(artist, title).also {
                                 println("LYRICS: saved-O")
                                 LyricsDao.save(artist, title, it)
                             }
                         } catch (e: Exception) {
                             try {
+                                // another try with fixed
                                 findLyricsOnline(fixedArtist, fixedTitle).also {
                                     println("LYRICS: saved-F")
                                     LyricsDao.save(fixedArtist, fixedTitle, it)
                                 }
                             } catch (e: Exception) {
+                                // :(
                                 println("LYRICS: no lyrics found for $title by $artist")
                                 ""
                             }
