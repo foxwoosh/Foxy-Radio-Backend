@@ -1,9 +1,9 @@
-package studio.foxwoosh.admin
+package studio.foxwoosh.serivces.admin
 
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import studio.foxwoosh.ultra.Connection
+import studio.foxwoosh.serivces.ultra.Connection
 
 fun Application.installAdminProvider(connections: Set<Connection>) {
     routing {

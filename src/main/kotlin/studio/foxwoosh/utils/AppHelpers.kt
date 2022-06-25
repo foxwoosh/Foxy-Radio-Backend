@@ -1,4 +1,4 @@
-package studio.foxwoosh
+package studio.foxwoosh.utils
 
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*

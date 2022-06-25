@@ -1,4 +1,4 @@
-package studio.foxwoosh.ultra
+package studio.foxwoosh.serivces.ultra
 
 import io.ktor.websocket.*
 import java.util.*

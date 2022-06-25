@@ -1,4 +1,4 @@
-package studio.foxwoosh.lyrics
+package studio.foxwoosh.serivces.lyrics
 
 import io.ktor.server.application.*
 import io.ktor.server.auth.*

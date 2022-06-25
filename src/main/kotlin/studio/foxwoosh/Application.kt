@@ -5,12 +5,13 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
-import studio.foxwoosh.admin.installAdminProvider
+import studio.foxwoosh.serivces.admin.installAdminProvider
 import studio.foxwoosh.database.AppDatabase
-import studio.foxwoosh.lyrics.lyricsGetter
-import studio.foxwoosh.auth.auth
-import studio.foxwoosh.ultra.Connection
-import studio.foxwoosh.ultra.ultraWebsocket
+import studio.foxwoosh.serivces.lyrics.lyricsGetter
+import studio.foxwoosh.serivces.auth.auth
+import studio.foxwoosh.serivces.ultra.Connection
+import studio.foxwoosh.serivces.ultra.ultraWebsocket
+import studio.foxwoosh.utils.AppJson
 import java.util.*
 
 fun main() {

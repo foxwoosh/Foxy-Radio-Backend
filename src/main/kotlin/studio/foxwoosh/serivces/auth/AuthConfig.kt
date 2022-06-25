@@ -1,4 +1,4 @@
-package studio.foxwoosh.auth
+package studio.foxwoosh.serivces.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier

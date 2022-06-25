@@ -1,4 +1,4 @@
-package studio.foxwoosh.ultra.messages
+package studio.foxwoosh.serivces.ultra.messages
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

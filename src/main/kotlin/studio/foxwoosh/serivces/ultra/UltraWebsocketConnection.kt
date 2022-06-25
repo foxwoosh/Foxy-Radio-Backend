@@ -1,4 +1,4 @@
-package studio.foxwoosh.ultra
+package studio.foxwoosh.serivces.ultra
 
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -10,16 +10,15 @@ import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
-import studio.foxwoosh.AppHttpClient
-import studio.foxwoosh.AppJson
-import studio.foxwoosh.sendText
-import studio.foxwoosh.ultra.client_responses.CurrentTrackResponse
-import studio.foxwoosh.ultra.client_responses.UniqueIdResponse
-import studio.foxwoosh.ultra.mappers.mapToMessage
-import studio.foxwoosh.ultra.messages.UltraSongDataMessage
-import studio.foxwoosh.ultra.socket_incomes.ParametrizedMessage
+import studio.foxwoosh.utils.AppHttpClient
+import studio.foxwoosh.utils.AppJson
+import studio.foxwoosh.utils.sendText
+import studio.foxwoosh.serivces.ultra.client_responses.CurrentTrackResponse
+import studio.foxwoosh.serivces.ultra.client_responses.UniqueIdResponse
+import studio.foxwoosh.serivces.ultra.mappers.mapToMessage
+import studio.foxwoosh.serivces.ultra.messages.UltraSongDataMessage
+import studio.foxwoosh.serivces.ultra.socket_incomes.ParametrizedMessage
 import java.time.Duration
-import java.util.*
 
 private val ultraPollingScope = object : CoroutineScope {
     override val coroutineContext = SupervisorJob() + Dispatchers.IO

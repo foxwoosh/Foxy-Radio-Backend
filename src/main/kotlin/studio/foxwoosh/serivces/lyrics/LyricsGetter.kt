@@ -1,4 +1,4 @@
-package studio.foxwoosh.lyrics
+package studio.foxwoosh.serivces.lyrics
 
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -7,7 +7,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.encodeToString
 import org.jsoup.Jsoup
 import org.jsoup.nodes.TextNode
-import studio.foxwoosh.AppJson
+import studio.foxwoosh.utils.AppJson
 import studio.foxwoosh.database.LyricsDao
 import studio.foxwoosh.http_responses.LyricsResponse
 

@@ -1,9 +1,9 @@
-package studio.foxwoosh.ultra.mappers
+package studio.foxwoosh.serivces.ultra.mappers
 
-import studio.foxwoosh.ultra.client_responses.CurrentTrackResponse
-import studio.foxwoosh.ultra.client_responses.PreviousTrackResponse
-import studio.foxwoosh.ultra.messages.UltraMessageType
-import studio.foxwoosh.ultra.messages.UltraSongDataMessage
+import studio.foxwoosh.serivces.ultra.client_responses.CurrentTrackResponse
+import studio.foxwoosh.serivces.ultra.client_responses.PreviousTrackResponse
+import studio.foxwoosh.serivces.ultra.messages.UltraMessageType
+import studio.foxwoosh.serivces.ultra.messages.UltraSongDataMessage
 
 fun CurrentTrackResponse.mapToMessage() = UltraSongDataMessage(
     UltraMessageType.SONG_DATA,

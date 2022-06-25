@@ -1,4 +1,4 @@
-package studio.foxwoosh.auth
+package studio.foxwoosh.serivces.auth
 
 import io.ktor.http.*
 import io.ktor.server.application.*
