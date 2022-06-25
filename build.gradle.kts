@@ -35,6 +35,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
 
@@ -46,6 +47,8 @@ dependencies {
     implementation ("org.postgresql:postgresql:42.4.0")
 
     implementation("org.jsoup:jsoup:1.15.1")
+
+    implementation("org.flywaydb:flyway-core:8.5.13")
 
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
