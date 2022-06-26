@@ -37,10 +37,11 @@ fun Application.auth() {
                             token = AuthConfig.generateToken(it.id, it.login, it.password)
                         )
                     )
-                } else {
-                    call.respond(HttpStatusCode.Forbidden, "Wrong password or user does not exist")
+                    return@post
                 }
-            } ?: call.respond(HttpStatusCode.Forbidden, "Wrong password or user does not exist")
+            }
+
+            call.respond(HttpStatusCode.Forbidden, "Wrong password or user does not exist")
         }
 
         post("/v1/register") {

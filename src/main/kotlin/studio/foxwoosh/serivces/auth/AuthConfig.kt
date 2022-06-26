@@ -8,7 +8,7 @@ import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 object AuthConfig {
-    private const val issuer = "foxy.woosh"
+    private val issuer = System.getenv("AUTH_ISSUER")
     private val algorithm = Algorithm.HMAC512(System.getenv("SECRET_AUTH_KEY"))
 
     val verifier: JWTVerifier = JWT
