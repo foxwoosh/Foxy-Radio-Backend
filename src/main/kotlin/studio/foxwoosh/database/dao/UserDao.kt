@@ -7,12 +7,13 @@ import org.jetbrains.exposed.sql.update
 import studio.foxwoosh.database.AppDatabase
 import studio.foxwoosh.database.UserDispatcher
 import studio.foxwoosh.database.tables.User
+import studio.foxwoosh.database.tables.UserRole
 import studio.foxwoosh.database.tables.Users
 
 interface IUserDao {
     suspend fun get(login: String): User?
     suspend fun get(id: Long): User?
-    suspend fun save(login: String, password: String, name: String, email: String): User?
+    suspend fun save(login: String, password: String, name: String, email: String, role: UserRole): User?
     suspend fun update(login: String, name: String?, email: String?): Boolean
 }
 
@@ -31,13 +32,14 @@ class UserDao : IUserDao {
             .singleOrNull()
     }
 
-    override suspend fun save(login: String, password: String, name: String, email: String): User? {
+    override suspend fun save(login: String, password: String, name: String, email: String, role: UserRole): User? {
         val statement = AppDatabase.query(UserDispatcher) {
             Users.insert { s ->
                 s[Users.login] = login
                 s[Users.password] = password
                 s[Users.email] = email
                 s[Users.name] = name
+                s[Users.role] = role.name
             }
         }
 
@@ -56,6 +58,7 @@ class UserDao : IUserDao {
         row[Users.login],
         row[Users.password],
         row[Users.email],
-        row[Users.name]
+        row[Users.name],
+        UserRole.valueOf(row[Users.role])
     )
 }

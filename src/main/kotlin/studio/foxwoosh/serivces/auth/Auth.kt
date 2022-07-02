@@ -9,6 +9,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import studio.foxwoosh.database.UserDao
+import studio.foxwoosh.database.tables.UserRole
 import studio.foxwoosh.http_responses.UserResponse
 
 fun Application.auth() {
@@ -59,7 +60,8 @@ fun Application.auth() {
                 login = user.login,
                 password = user.password,
                 name = user.name,
-                email = user.email
+                email = user.email,
+                role = UserRole.USER
             )?.id ?: run {
                 call.respond(HttpStatusCode.InternalServerError, "Something wrong")
                 return@post

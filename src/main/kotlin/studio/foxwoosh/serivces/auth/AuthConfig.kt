@@ -22,13 +22,5 @@ object AuthConfig {
         .withClaim("id", id)
         .withClaim("login", login)
         .withClaim("password", password)
-        .withExpiresAt(
-            Date(
-                System.currentTimeMillis()
-                    .toDuration(DurationUnit.MILLISECONDS)
-                    .plus(30.toDuration(DurationUnit.DAYS))
-                    .inWholeMilliseconds
-            )
-        )
         .sign(algorithm)
 }

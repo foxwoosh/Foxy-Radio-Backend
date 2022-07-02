@@ -7,7 +7,8 @@ data class User(
     val login: String,
     val password: String,
     val email: String,
-    val name: String
+    val name: String,
+    val role: UserRole
 )
 
 object Users : Table() {
@@ -16,6 +17,11 @@ object Users : Table() {
     val password = text("password")
     val email = text("email")
     val name = text("name")
+    val role = text("role")
 
     override val primaryKey = PrimaryKey(id)
+}
+
+enum class UserRole {
+    ADMIN, MODERATOR, USER
 }
