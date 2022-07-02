@@ -1,4 +1,4 @@
-package studio.foxwoosh.serivces.admin
+package studio.foxwoosh.serivces.monitor
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -8,9 +8,9 @@ import io.ktor.server.routing.*
 import studio.foxwoosh.database.UserDao
 import studio.foxwoosh.database.tables.UserRole
 import studio.foxwoosh.serivces.auth.ValidatedUserPrincipal
-import studio.foxwoosh.serivces.ultra.Connection
+import studio.foxwoosh.serivces.socket.Connection
 
-fun Application.installAdminProvider(connections: Set<Connection>) {
+fun Application.monitor(connections: Set<Connection>) {
     routing {
         authenticate {
             get("/monitor") {

@@ -1,4 +1,4 @@
-package studio.foxwoosh.serivces.ultra.socket_incomes
+package studio.foxwoosh.serivces.socket.socket_incomes
 
 import kotlinx.serialization.Serializable
 

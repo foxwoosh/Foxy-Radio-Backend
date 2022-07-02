@@ -1,11 +1,11 @@
-package studio.foxwoosh.serivces.ultra.messages
+package studio.foxwoosh.serivces.socket.messages
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UltraSongDataMessage(
-    @SerialName("type") override val type: UltraMessageType,
+data class SongDataMessage(
+    @SerialName("type") override val type: MessageType,
     @SerialName("id") val id: String,
     @SerialName("title") val title: String,
     @SerialName("artist") val artist: String,
@@ -21,7 +21,7 @@ data class UltraSongDataMessage(
     @SerialName("youtube_url") val youtubeUrl: String?,
     @SerialName("ytmusic_url") val youtubeMusicUrl: String?,
     @SerialName("prev_tracks") val previousTracks: List<PreviousTrack>
-) : UltraMessage {
+) : SocketMessage {
     @Serializable
     data class PreviousTrack(
         @SerialName("title") val title: String,

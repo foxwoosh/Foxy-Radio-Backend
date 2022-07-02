@@ -1,12 +1,12 @@
-package studio.foxwoosh.serivces.ultra.mappers
+package studio.foxwoosh.serivces.socket.mappers
 
-import studio.foxwoosh.serivces.ultra.client_responses.CurrentTrackResponse
-import studio.foxwoosh.serivces.ultra.client_responses.PreviousTrackResponse
-import studio.foxwoosh.serivces.ultra.messages.UltraMessageType
-import studio.foxwoosh.serivces.ultra.messages.UltraSongDataMessage
+import studio.foxwoosh.serivces.socket.client_responses.CurrentTrackResponse
+import studio.foxwoosh.serivces.socket.client_responses.PreviousTrackResponse
+import studio.foxwoosh.serivces.socket.messages.MessageType
+import studio.foxwoosh.serivces.socket.messages.SongDataMessage
 
-fun CurrentTrackResponse.mapToMessage() = UltraSongDataMessage(
-    UltraMessageType.SONG_DATA,
+fun CurrentTrackResponse.mapToMessage() = SongDataMessage(
+    MessageType.SONG_DATA,
     id = uniqueID,
     album = album,
     artist = artist ?: "No data",
@@ -24,7 +24,7 @@ fun CurrentTrackResponse.mapToMessage() = UltraSongDataMessage(
     previousTracks = previousTracks.map { it.mapToMessage() }
 )
 
-fun PreviousTrackResponse.mapToMessage() = UltraSongDataMessage.PreviousTrack(
+fun PreviousTrackResponse.mapToMessage() = SongDataMessage.PreviousTrack(
     artist = artist,
     cover = coverWebp,
     title = title,

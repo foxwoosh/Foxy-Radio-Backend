@@ -1,4 +1,4 @@
-package studio.foxwoosh.serivces.ultra
+package studio.foxwoosh.serivces.socket
 
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -13,14 +13,14 @@ import kotlinx.serialization.encodeToString
 import studio.foxwoosh.utils.AppHttpClient
 import studio.foxwoosh.utils.AppJson
 import studio.foxwoosh.utils.sendText
-import studio.foxwoosh.serivces.ultra.client_responses.CurrentTrackResponse
-import studio.foxwoosh.serivces.ultra.client_responses.UniqueIdResponse
-import studio.foxwoosh.serivces.ultra.mappers.mapToMessage
-import studio.foxwoosh.serivces.ultra.messages.UltraSongDataMessage
-import studio.foxwoosh.serivces.ultra.socket_incomes.ParametrizedMessage
+import studio.foxwoosh.serivces.socket.client_responses.CurrentTrackResponse
+import studio.foxwoosh.serivces.socket.client_responses.UniqueIdResponse
+import studio.foxwoosh.serivces.socket.mappers.mapToMessage
+import studio.foxwoosh.serivces.socket.messages.SongDataMessage
+import studio.foxwoosh.serivces.socket.socket_incomes.ParametrizedMessage
 import java.time.Duration
 
-private val ultraPollingScope = object : CoroutineScope {
+private val pollingScope = object : CoroutineScope {
     override val coroutineContext = SupervisorJob() + Dispatchers.IO
 }
 
@@ -34,7 +34,7 @@ fun Application.webSocket(connections: MutableSet<Connection>) {
     }
 
     var pollingJob: Job? = null
-    var lastFetchedData: UltraSongDataMessage? = null
+    var lastFetchedData: SongDataMessage? = null
 
     routing {
         webSocket("/ultra") {
@@ -127,7 +127,7 @@ private fun removeConnection(connections: MutableSet<Connection>, connection: Co
 private fun pollingJob(
     getId: suspend () -> String,
     fetch: suspend () -> Unit
-) = ultraPollingScope.launch {
+) = pollingScope.launch {
     println("WebSocket: polling started")
 
     var currentUniqueID: String? = null
