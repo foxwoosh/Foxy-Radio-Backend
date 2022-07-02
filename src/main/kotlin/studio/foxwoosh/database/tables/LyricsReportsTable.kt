@@ -4,18 +4,22 @@ import org.jetbrains.exposed.sql.Table
 
 data class LyricsReport(
     val id: String,
-    val userID: Long,
+    val reportAuthorID: Long,
     val lyricsID: String,
-    val comment: String,
-    val state: LyricsReportState
+    val userComment: String,
+    val state: LyricsReportState,
+    val moderatorID: Long?,
+    val moderatorComment: String?
 )
 
 object LyricsReports : Table() {
     val id = text("id")
-    val userID = long("user_id")
+    val reportAuthorID = long("author_id")
     val lyricsID = text("lyrics_id")
-    val comment = text("comment")
+    val userComment = text("user_comment")
     val state = text("state")
+    val moderatorID = long("moderator_id").nullable()
+    val moderatorComment = text("moderator_comment").nullable()
 
     override val primaryKey = PrimaryKey(id)
 }

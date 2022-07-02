@@ -3,10 +3,10 @@ package studio.foxwoosh.serivces.socket.mappers
 import studio.foxwoosh.serivces.socket.client_responses.CurrentTrackResponse
 import studio.foxwoosh.serivces.socket.client_responses.PreviousTrackResponse
 import studio.foxwoosh.serivces.socket.messages.MessageType
-import studio.foxwoosh.serivces.socket.messages.SongDataMessage
+import studio.foxwoosh.serivces.socket.messages.outgoing.SongDataMessage
 
 fun CurrentTrackResponse.mapToMessage() = SongDataMessage(
-    MessageType.SONG_DATA,
+    type = MessageType.SONG_DATA,
     id = uniqueID,
     album = album,
     artist = artist ?: "No data",

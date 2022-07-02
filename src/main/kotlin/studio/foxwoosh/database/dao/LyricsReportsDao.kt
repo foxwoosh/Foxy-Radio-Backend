@@ -12,28 +12,43 @@ import studio.foxwoosh.database.tables.LyricsReports
 import java.util.UUID
 
 interface ILyricsReportsDao {
+
+    suspend fun get(reportID: String): LyricsReport?
     suspend fun getUserReports(userID: Long): List<LyricsReport>
     suspend fun saveReport(
-        userID: Long,
+        authorID: Long,
         lyricsID: String,
-        comment: String,
+        userComment: String,
         state: LyricsReportState
     ): LyricsReport
 
-    suspend fun updateReportState(id: String, state: LyricsReportState): Boolean
+    suspend fun updateReportState(
+        id: String,
+        state: LyricsReportState,
+        moderatorID: Long,
+        moderatorComment: String
+    ): Boolean
 }
 
 class LyricsReportsDao : ILyricsReportsDao {
-    override suspend fun getUserReports(userID: Long): List<LyricsReport> {
-        return LyricsReports
-            .select { LyricsReports.userID eq userID }
+
+    override suspend fun get(reportID: String) = AppDatabase.query(LyricsReportDispatcher) {
+        LyricsReports
+            .select { LyricsReports.id eq reportID }
+            .map { get(it) }
+            .singleOrNull()
+    }
+
+    override suspend fun getUserReports(userID: Long) = AppDatabase.query(LyricsReportDispatcher) {
+        LyricsReports
+            .select { LyricsReports.reportAuthorID eq userID }
             .map { get(it) }
     }
 
     override suspend fun saveReport(
-        userID: Long,
+        authorID: Long,
         lyricsID: String,
-        comment: String,
+        userComment: String,
         state: LyricsReportState
     ): LyricsReport {
         val id = UUID.randomUUID().toString()
@@ -41,42 +56,47 @@ class LyricsReportsDao : ILyricsReportsDao {
         AppDatabase.query(LyricsReportDispatcher) {
             LyricsReports.insert {
                 it[LyricsReports.id] = id
-                it[LyricsReports.userID] = userID
+                it[LyricsReports.reportAuthorID] = authorID
                 it[LyricsReports.lyricsID] = lyricsID
-                it[LyricsReports.comment] = comment
+                it[LyricsReports.userComment] = userComment
                 it[LyricsReports.state] = state.name
             }
         }
 
         return LyricsReport(
             id = id,
-            userID = userID,
+            reportAuthorID = authorID,
             lyricsID = lyricsID,
-            comment = comment,
-            state = state
+            userComment = userComment,
+            state = state,
+            moderatorID = null,
+            moderatorComment = null
         )
     }
 
-    override suspend fun updateReportState(id: String, state: LyricsReportState) =
+    override suspend fun updateReportState(
+        id: String,
+        state: LyricsReportState,
+        moderatorID: Long,
+        moderatorComment: String
+    ): Boolean =
         AppDatabase.query(LyricsReportDispatcher) {
             LyricsReports.update({ LyricsReports.id eq id }) {
                 it[LyricsReports.state] = state.name
+                it[LyricsReports.moderatorID] = moderatorID
+                it[LyricsReports.moderatorComment] = moderatorComment
             } > 0
         }
 
     private fun get(row: ResultRow): LyricsReport {
-        val id = row[LyricsReports.id]
-        val userID = row[LyricsReports.userID]
-        val lyricsID = row[LyricsReports.lyricsID]
-        val comment = row[LyricsReports.comment]
-        val state = LyricsReportState.valueOf(row[LyricsReports.state])
-
         return LyricsReport(
-            id = id,
-            userID = userID,
-            lyricsID = lyricsID,
-            comment = comment,
-            state = state
+            id = row[LyricsReports.id],
+            reportAuthorID = row[LyricsReports.reportAuthorID],
+            lyricsID = row[LyricsReports.lyricsID],
+            userComment = row[LyricsReports.userComment],
+            state = LyricsReportState.valueOf(row[LyricsReports.state]),
+            moderatorID = row[LyricsReports.moderatorID],
+            moderatorComment = row[LyricsReports.moderatorComment]
         )
     }
 }

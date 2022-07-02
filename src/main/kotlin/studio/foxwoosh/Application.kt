@@ -10,7 +10,7 @@ import studio.foxwoosh.database.AppDatabase
 import studio.foxwoosh.serivces.lyrics.lyricsGetter
 import studio.foxwoosh.serivces.auth.auth
 import studio.foxwoosh.serivces.lyrics.lyricsReports
-import studio.foxwoosh.serivces.socket.Connection
+import studio.foxwoosh.serivces.socket.SocketConnection
 import studio.foxwoosh.serivces.socket.webSocket
 import studio.foxwoosh.serivces.utils.utils
 import studio.foxwoosh.utils.AppJson
@@ -22,14 +22,14 @@ fun main() {
         host = System.getenv("APP_HOST"),
         port = System.getenv("APP_PORT").toInt(),
     ) {
-        val connectionsHolder = Collections.synchronizedSet<Connection?>(LinkedHashSet())
+        val connectionsHolder = Collections.synchronizedSet<SocketConnection?>(LinkedHashSet())
 
         AppDatabase.init()
 
         install(ContentNegotiation) { json(AppJson) }
 
         auth()
-        lyricsReports()
+        lyricsReports(connectionsHolder)
         lyricsGetter()
         utils()
 

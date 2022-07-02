@@ -16,15 +16,15 @@ import studio.foxwoosh.utils.sendText
 import studio.foxwoosh.serivces.socket.client_responses.CurrentTrackResponse
 import studio.foxwoosh.serivces.socket.client_responses.UniqueIdResponse
 import studio.foxwoosh.serivces.socket.mappers.mapToMessage
-import studio.foxwoosh.serivces.socket.messages.SongDataMessage
-import studio.foxwoosh.serivces.socket.socket_incomes.ParametrizedMessage
+import studio.foxwoosh.serivces.socket.messages.outgoing.SongDataMessage
+import studio.foxwoosh.serivces.socket.messages.incoming.ParametrizedMessage
 import java.time.Duration
 
 private val pollingScope = object : CoroutineScope {
     override val coroutineContext = SupervisorJob() + Dispatchers.IO
 }
 
-fun Application.webSocket(connections: MutableSet<Connection>) {
+fun Application.webSocket(connections: MutableSet<SocketConnection>) {
     install(WebSockets) {
         pingPeriod = Duration.ofSeconds(15)
         timeout = Duration.ofSeconds(15)
@@ -38,7 +38,7 @@ fun Application.webSocket(connections: MutableSet<Connection>) {
 
     routing {
         webSocket("/ultra") {
-            val connection = Connection(this)
+            val connection = SocketConnection(this)
 
             lastFetchedData?.let {
                 println("WebSocket: send last fetched to new client")
@@ -108,7 +108,7 @@ fun Application.webSocket(connections: MutableSet<Connection>) {
 /**
  * @return - should start polling
  */
-private fun addConnection(connections: MutableSet<Connection>, connection: Connection): Boolean {
+private fun addConnection(connections: MutableSet<SocketConnection>, connection: SocketConnection): Boolean {
     connections.add(connection)
     println("WebSocket: added connection, count = ${connections.size}")
     return connections.size == 1
@@ -118,7 +118,7 @@ private fun addConnection(connections: MutableSet<Connection>, connection: Conne
  * @return - should stop polling
  */
 
-private fun removeConnection(connections: MutableSet<Connection>, connection: Connection): Boolean {
+private fun removeConnection(connections: MutableSet<SocketConnection>, connection: SocketConnection): Boolean {
     connections.remove(connection)
     println("WebSocket: removed connection, count = ${connections.size}")
     return connections.isEmpty()

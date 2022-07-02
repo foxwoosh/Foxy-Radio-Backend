@@ -8,9 +8,9 @@ import io.ktor.server.routing.*
 import studio.foxwoosh.database.UserDao
 import studio.foxwoosh.database.tables.UserRole
 import studio.foxwoosh.serivces.auth.ValidatedUserPrincipal
-import studio.foxwoosh.serivces.socket.Connection
+import studio.foxwoosh.serivces.socket.SocketConnection
 
-fun Application.monitor(connections: Set<Connection>) {
+fun Application.monitor(connections: Set<SocketConnection>) {
     routing {
         authenticate {
             get("/monitor") {

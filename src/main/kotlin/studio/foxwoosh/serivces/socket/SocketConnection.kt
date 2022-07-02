@@ -4,7 +4,7 @@ import io.ktor.websocket.*
 import java.util.*
 import kotlin.collections.HashMap
 
-class Connection(val session: DefaultWebSocketSession) {
+class SocketConnection(val session: DefaultWebSocketSession) {
     val id = UUID.randomUUID().toString()
     val clientInfo = ClientInfo()
 
