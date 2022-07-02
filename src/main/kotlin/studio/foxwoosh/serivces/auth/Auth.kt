@@ -15,6 +15,9 @@ fun Application.auth() {
     install(Authentication) {
         jwt {
             verifier(AuthConfig.verifier)
+            validate { credential ->
+                credential.payload.getClaim("id").asLong()?.let { ValidatedUserPrincipal(it) }
+            }
             challenge { _, _ ->
                 call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
             }
@@ -23,7 +26,7 @@ fun Application.auth() {
 
     routing {
         post("/v1/login") {
-            val user = call.receive<AuthUser>()
+            val user = call.receive<AuthUserRequest>()
 
             UserDao.get(user.login)?.let {
                 if (user.password == it.password) {
@@ -45,7 +48,7 @@ fun Application.auth() {
         }
 
         post("/v1/register") {
-            val user = call.receive<RegisterUser>()
+            val user = call.receive<RegisterUserRequest>()
 
             if (UserDao.get(user.login) != null) {
                 call.respond(HttpStatusCode.Conflict, "This username already registered")
@@ -76,8 +79,10 @@ fun Application.auth() {
     }
 }
 
-@Serializable
-data class AuthUser(val login: String, val password: String)
+data class ValidatedUserPrincipal(val id: Long): Principal
 
 @Serializable
-data class RegisterUser(val login: String, val password: String, val email: String = "", val name: String = "")
+data class AuthUserRequest(val login: String, val password: String)
+
+@Serializable
+data class RegisterUserRequest(val login: String, val password: String, val email: String = "", val name: String = "")

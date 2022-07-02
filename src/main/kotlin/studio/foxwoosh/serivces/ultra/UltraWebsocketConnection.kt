@@ -24,7 +24,7 @@ private val ultraPollingScope = object : CoroutineScope {
     override val coroutineContext = SupervisorJob() + Dispatchers.IO
 }
 
-fun Application.ultraWebsocket(connections: MutableSet<Connection>) {
+fun Application.webSocket(connections: MutableSet<Connection>) {
     install(WebSockets) {
         pingPeriod = Duration.ofSeconds(15)
         timeout = Duration.ofSeconds(15)
@@ -41,7 +41,7 @@ fun Application.ultraWebsocket(connections: MutableSet<Connection>) {
             val connection = Connection(this)
 
             lastFetchedData?.let {
-                println("ULTRA: send last fetched to new client")
+                println("WebSocket: send last fetched to new client")
                 outgoing.sendText(AppJson.encodeToString(it))
             }
 
@@ -60,7 +60,7 @@ fun Application.ultraWebsocket(connections: MutableSet<Connection>) {
 
                         lastFetchedData = response.mapToMessage().also { data ->
                             val dataString = AppJson.encodeToString(data)
-                            println("ULTRA: sending track data - ${data.title} - ${data.artist}")
+                            println("WebSocket: sending track data - ${data.title} - ${data.artist}")
 
                             connections.forEach {
                                 it.session.outgoing.sendText(dataString)
@@ -79,17 +79,23 @@ fun Application.ultraWebsocket(connections: MutableSet<Connection>) {
                         ParametrizedMessage.Type.SUBSCRIBE -> {
                             connection.clientInfo.putAll(message.params)
                         }
+                        ParametrizedMessage.Type.LOGGED_USER_DATA -> {
+                            connection.userID = message.params["id"]?.toLong() ?: 0
+                        }
+                        ParametrizedMessage.Type.USER_LOGOUT -> {
+                            connection.userID = 0
+                        }
                         ParametrizedMessage.Type.UNSUBSCRIBE -> {
-                            println("ULTRA: client unsubscribed from connection ${connection.id}")
+                            println("WebSocket: client unsubscribed from connection ${connection.id}")
                             close(CloseReason(CloseReason.Codes.NORMAL, "Unsubscribe"))
                         }
                     }
                 }
             } catch (e: Exception) {
-                println("ULTRA: socket error, ${e.message}")
+                println("WebSocket: socket error, ${e.message}")
             } finally {
                 if (removeConnection(connections, connection)) {
-                    println("ULTRA: polling stopped")
+                    println("WebSocket: polling stopped")
                     pollingJob?.cancel()
                     pollingJob = null
                     lastFetchedData = null
@@ -104,7 +110,7 @@ fun Application.ultraWebsocket(connections: MutableSet<Connection>) {
  */
 private fun addConnection(connections: MutableSet<Connection>, connection: Connection): Boolean {
     connections.add(connection)
-    println("ULTRA: added connection, count = ${connections.size}")
+    println("WebSocket: added connection, count = ${connections.size}")
     return connections.size == 1
 }
 
@@ -114,7 +120,7 @@ private fun addConnection(connections: MutableSet<Connection>, connection: Conne
 
 private fun removeConnection(connections: MutableSet<Connection>, connection: Connection): Boolean {
     connections.remove(connection)
-    println("ULTRA: removed connection, count = ${connections.size}")
+    println("WebSocket: removed connection, count = ${connections.size}")
     return connections.isEmpty()
 }
 
@@ -122,7 +128,7 @@ private fun pollingJob(
     getId: suspend () -> String,
     fetch: suspend () -> Unit
 ) = ultraPollingScope.launch {
-    println("ULTRA: polling started")
+    println("WebSocket: polling started")
 
     var currentUniqueID: String? = null
 
@@ -131,7 +137,7 @@ private fun pollingJob(
             val fetchedUniqueID = getId()
 
             if (fetchedUniqueID != currentUniqueID) {
-                println("ULTRA: fetching track")
+                println("WebSocket: fetching track")
                 fetch()
                 currentUniqueID = fetchedUniqueID
             }
@@ -140,7 +146,7 @@ private fun pollingJob(
         } catch (e: Exception) {
             delay(5000)
             
-            println("ULTRA: fetching failed, ${e.message}")
+            println("WebSocket: fetching failed, ${e.message}")
         }
     }
 }

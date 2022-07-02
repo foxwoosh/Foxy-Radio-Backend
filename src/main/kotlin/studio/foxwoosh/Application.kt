@@ -9,8 +9,10 @@ import studio.foxwoosh.serivces.admin.installAdminProvider
 import studio.foxwoosh.database.AppDatabase
 import studio.foxwoosh.serivces.lyrics.lyricsGetter
 import studio.foxwoosh.serivces.auth.auth
+import studio.foxwoosh.serivces.lyrics.lyricsReports
 import studio.foxwoosh.serivces.ultra.Connection
-import studio.foxwoosh.serivces.ultra.ultraWebsocket
+import studio.foxwoosh.serivces.ultra.webSocket
+import studio.foxwoosh.serivces.utils.utils
 import studio.foxwoosh.utils.AppJson
 import java.util.*
 
@@ -27,9 +29,11 @@ fun main() {
         install(ContentNegotiation) { json(AppJson) }
 
         auth()
-
+        lyricsReports()
         lyricsGetter()
-        ultraWebsocket(connectionsHolder)
+        utils()
+
+        webSocket(connectionsHolder)
 
         installAdminProvider(connectionsHolder)
     }.start(wait = true)

@@ -10,6 +10,9 @@ data class ParametrizedMessage(
     operator fun get(key: String) = params[key]
 
     enum class Type {
-        SUBSCRIBE, UNSUBSCRIBE
+        SUBSCRIBE,
+        UNSUBSCRIBE,
+        LOGGED_USER_DATA,
+        USER_LOGOUT
     }
 }

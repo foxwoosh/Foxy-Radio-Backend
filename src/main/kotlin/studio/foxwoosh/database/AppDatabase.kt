@@ -8,11 +8,9 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
-import studio.foxwoosh.database.dao.ILyricsDao
-import studio.foxwoosh.database.dao.IUserDao
-import studio.foxwoosh.database.dao.LyricsDao
-import studio.foxwoosh.database.dao.UserDao
+import studio.foxwoosh.database.dao.*
 import studio.foxwoosh.database.tables.Lyrics
+import studio.foxwoosh.database.tables.LyricsReports
 import studio.foxwoosh.database.tables.Users
 import java.util.concurrent.Executors
 
@@ -27,16 +25,15 @@ object AppDatabase {
             .configure()
             .dataSource(url, user, password)
             .load()
-            .baseline()
-
-//            .migrate()
+            .migrate()
 
         Database.connect(url, driver, user, password)
 
         transaction {
             SchemaUtils.create(
                 Lyrics,
-                Users
+                Users,
+                LyricsReports
             )
         }
     }
@@ -50,6 +47,8 @@ val LyricsDispatcher = Executors.newSingleThreadExecutor {
 }.asCoroutineDispatcher()
 
 val UserDispatcher = Dispatchers.IO
+val LyricsReportDispatcher = Dispatchers.IO
 
 val LyricsDao: ILyricsDao = LyricsDao()
 val UserDao: IUserDao = UserDao()
+val LyricsReportsDao: ILyricsReportsDao = LyricsReportsDao()

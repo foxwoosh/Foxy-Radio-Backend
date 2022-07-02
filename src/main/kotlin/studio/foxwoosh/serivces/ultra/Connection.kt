@@ -8,6 +8,8 @@ class Connection(val session: DefaultWebSocketSession) {
     val id = UUID.randomUUID().toString()
     val clientInfo = ClientInfo()
 
+    var userID = 0L
+
     operator fun set(key: String, value: String) {
         clientInfo[key] = value
     }
@@ -15,7 +17,12 @@ class Connection(val session: DefaultWebSocketSession) {
     operator fun get(key: String) = clientInfo[key]
 
     override fun toString(): String {
-        return "Client ID: $id\n${clientInfo}"
+        return "connection_id: $id\n${clientInfo}\n" +
+                if (userID > 0) {
+                    "user is logged in: $userID"
+                } else {
+                    "user is not logged in"
+                }
     }
     class ClientInfo : HashMap<String, String> {
 
