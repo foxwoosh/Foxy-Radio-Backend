@@ -1,5 +1,6 @@
 package studio.foxwoosh.serivces.lyrics
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
@@ -9,25 +10,25 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.TextNode
 import studio.foxwoosh.utils.AppJson
 import studio.foxwoosh.database.LyricsDao
+import studio.foxwoosh.database.LyricsReportsDao
 import studio.foxwoosh.http_responses.LyricsResponse
+import studio.foxwoosh.serivces.auth.ValidatedUserPrincipal
 
 fun Application.lyricsGetter() {
     routing {
-        get("/lyrics") {
-            call.respondText {
+        authenticate(optional = true) {
+            get("/v1/lyrics") {
                 val artist = call.request.queryParameters["artist"]
                 val title = call.request.queryParameters["title"]
 
-                if (artist.isNullOrEmpty() || title.isNullOrEmpty())
-                    return@respondText AppJson.encodeToString(LyricsResponse.empty)
+                if (artist.isNullOrEmpty() || title.isNullOrEmpty()) {
+                    call.respond(HttpStatusCode.BadRequest)
+                    return@get
+                }
 
-                var lyrics = ""
+                var lyrics = LyricsDao.get(artist, title)
 
-                val cachedOriginal = LyricsDao.get(artist, title)
-                if (cachedOriginal != null) {
-                    // try to find lyrics in database with original parameters
-                    lyrics = cachedOriginal.lyrics
-                } else {
+                if (lyrics == null) {
                     // if original wasn't found then try to find
                     // with fixed parameters (without some symbols etc)
                     val fixedTitle = fixQuery(title)
@@ -36,35 +37,47 @@ fun Application.lyricsGetter() {
                     if (fixedTitle != title || fixedArtist != artist) {
                         // try to look up database only if something was fixed in title or artist
                         LyricsDao.get(fixedArtist, fixedTitle)?.let {
-                            lyrics = it.lyrics
+                            lyrics = it
                         }
                     }
 
-                    // if lyrics still empty it's time to look up online
-                    if (lyrics.isEmpty()) {
+                    // if still not found, look up online
+                    if (lyrics == null) {
                         lyrics = try {
                             // first try with original data
-                            findLyricsOnline(artist, title).also {
-                                println("LYRICS: saved-O")
-                                LyricsDao.save(artist, title, it)
-                            }
+                            val foundOriginal = findLyricsOnline(artist, title)
+                            println("LYRICS: saved-O")
+                            LyricsDao.save(artist, title, foundOriginal)
                         } catch (e: Exception) {
                             try {
                                 // another try with fixed
-                                findLyricsOnline(fixedArtist, fixedTitle).also {
-                                    println("LYRICS: saved-F")
-                                    LyricsDao.save(fixedArtist, fixedTitle, it)
-                                }
+                                val foundFixed = findLyricsOnline(fixedArtist, fixedTitle)
+                                println("LYRICS: saved-F")
+                                LyricsDao.save(fixedArtist, fixedTitle, foundFixed)
                             } catch (e: Exception) {
                                 // :(
                                 println("LYRICS: no lyrics found for $title by $artist")
-                                ""
+                                null
                             }
                         }
                     }
                 }
 
-                AppJson.encodeToString(LyricsResponse(lyrics))
+                lyrics?.let { lyricData ->
+                    val user = call.principal<ValidatedUserPrincipal>()
+
+                    val report = user?.let { LyricsReportsDao.get(user.id, lyricData.id) }
+
+                    call.respond(
+                        HttpStatusCode.OK,
+                        LyricsResponse(
+                            lyricData.id,
+                            lyricData.lyrics,
+                            report?.state,
+                            report?.moderatorComment
+                        )
+                    )
+                } ?: call.respond(HttpStatusCode.BadRequest)
             }
         }
     }

@@ -10,7 +10,7 @@ import studio.foxwoosh.database.tables.Lyrics
 
 interface ILyricsDao {
     suspend fun get(artist: String, title: String): LyricData?
-    suspend fun save(artist: String, title: String, lyrics: String)
+    suspend fun save(artist: String, title: String, lyrics: String): LyricData
 }
 
 class LyricsDao : ILyricsDao {
@@ -21,10 +21,10 @@ class LyricsDao : ILyricsDao {
             .singleOrNull()
     }
 
-    override suspend fun save(artist: String, title: String, lyrics: String) {
-        AppDatabase.query(LyricsDispatcher) {
-            val id = id(artist, title)
+    override suspend fun save(artist: String, title: String, lyrics: String): LyricData {
+        val id = id(artist, title)
 
+        AppDatabase.query(LyricsDispatcher) {
             Lyrics.insert {
                 it[Lyrics.id] = id
                 it[Lyrics.artist] = artist
@@ -32,6 +32,8 @@ class LyricsDao : ILyricsDao {
                 it[Lyrics.lyrics] = lyrics
             }
         }
+
+        return LyricData(id, title, artist, lyrics)
     }
 
     private fun get(row: ResultRow): LyricData {

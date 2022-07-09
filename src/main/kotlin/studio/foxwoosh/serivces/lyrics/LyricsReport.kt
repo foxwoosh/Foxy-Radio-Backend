@@ -8,6 +8,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.encodeToString
+import studio.foxwoosh.ClientsConnections
 import studio.foxwoosh.database.LyricsReportsDao
 import studio.foxwoosh.database.UserDao
 import studio.foxwoosh.database.tables.LyricsReportState
@@ -19,9 +20,7 @@ import studio.foxwoosh.serivces.socket.messages.outgoing.LyricsReportUpdateMessa
 import studio.foxwoosh.utils.AppJson
 import studio.foxwoosh.utils.sendText
 
-fun Application.lyricsReports(
-    connections: Set<SocketConnection>
-) {
+fun Application.lyricsReports() {
     routing {
         authenticate {
             put("/v1/lyrics/report") {
@@ -78,7 +77,7 @@ fun Application.lyricsReports(
                             val updatedReport = LyricsReportsDao.get(updateRequest.reportID)
 
                             if (updatedReport != null) {
-                                connections
+                                ClientsConnections
                                     .find { it.userID == updatedReport.reportAuthorID }
                                     ?.session
                                     ?.outgoing
@@ -111,7 +110,7 @@ fun Application.lyricsReports(
 
 @kotlinx.serialization.Serializable
 data class NewLyricsReportRequest(
-    @SerialName("lyrics_id") val lyricsID: String,
+    @SerialName("lyrics_id") val lyricsID: Int,
     @SerialName("comment") val comment: String
 )
 
@@ -125,7 +124,7 @@ data class UpdateLyricsReportRequest(
 @kotlinx.serialization.Serializable
 data class LyricsReportResponse(
     @SerialName("id") val id: String,
-    @SerialName("lyrics_id") val lyricsID: String,
+    @SerialName("lyrics_id") val lyricsID: Int,
     @SerialName("user_comment") val userComment: String,
     @SerialName("state") val state: LyricsReportState,
     @SerialName("moderator_id") val moderatorID: Long?,

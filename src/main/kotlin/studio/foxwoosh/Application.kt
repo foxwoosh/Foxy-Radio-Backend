@@ -16,25 +16,25 @@ import studio.foxwoosh.serivces.utils.utils
 import studio.foxwoosh.utils.AppJson
 import java.util.*
 
+val ClientsConnections: MutableSet<SocketConnection> = Collections.synchronizedSet(LinkedHashSet())
+
 fun main() {
     embeddedServer(
         Netty,
         host = System.getenv("APP_HOST"),
         port = System.getenv("APP_PORT").toInt(),
     ) {
-        val connectionsHolder = Collections.synchronizedSet<SocketConnection?>(LinkedHashSet())
-
         AppDatabase.init()
 
         install(ContentNegotiation) { json(AppJson) }
 
         auth()
-        lyricsReports(connectionsHolder)
+        lyricsReports()
         lyricsGetter()
         utils()
 
-        webSocket(connectionsHolder)
+        webSocket()
 
-        monitor(connectionsHolder)
+        monitor()
     }.start(wait = true)
 }

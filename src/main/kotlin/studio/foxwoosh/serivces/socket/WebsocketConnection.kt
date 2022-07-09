@@ -1,30 +1,19 @@
 package studio.foxwoosh.serivces.socket
 
-import io.ktor.client.call.*
-import io.ktor.client.request.*
 import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.*
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import studio.foxwoosh.utils.AppHttpClient
-import studio.foxwoosh.utils.AppJson
-import studio.foxwoosh.utils.sendText
-import studio.foxwoosh.serivces.socket.client_responses.CurrentTrackResponse
-import studio.foxwoosh.serivces.socket.client_responses.UniqueIdResponse
-import studio.foxwoosh.serivces.socket.mappers.mapToMessage
-import studio.foxwoosh.serivces.socket.messages.outgoing.SongDataMessage
+import studio.foxwoosh.ClientsConnections
 import studio.foxwoosh.serivces.socket.messages.incoming.ParametrizedMessage
+import studio.foxwoosh.serivces.socket.stations.UltraFetcher
+import studio.foxwoosh.utils.AppJson
 import java.time.Duration
 
-private val pollingScope = object : CoroutineScope {
-    override val coroutineContext = SupervisorJob() + Dispatchers.IO
-}
-
-fun Application.webSocket(connections: MutableSet<SocketConnection>) {
+private val ultraFetcher = UltraFetcher()
+fun Application.webSocket() {
     install(WebSockets) {
         pingPeriod = Duration.ofSeconds(15)
         timeout = Duration.ofSeconds(15)
@@ -33,42 +22,11 @@ fun Application.webSocket(connections: MutableSet<SocketConnection>) {
         contentConverter = KotlinxWebsocketSerializationConverter(AppJson)
     }
 
-    var pollingJob: Job? = null
-    var lastFetchedData: SongDataMessage? = null
-
     routing {
         webSocket("/ultra") {
             val connection = SocketConnection(this)
 
-            lastFetchedData?.let {
-                println("WebSocket: send last fetched to new client")
-                outgoing.sendText(AppJson.encodeToString(it))
-            }
-
-            if (addConnection(connections, connection) && pollingJob?.isActive != true) {
-                pollingJob = pollingJob(
-                    getId = {
-                        AppHttpClient
-                            .get("https://meta.fmgid.com/stations/ultra/id.json?t=${System.currentTimeMillis()}")
-                            .body<UniqueIdResponse>()
-                            .uniqueID
-                    },
-                    fetch = {
-                        val response = AppHttpClient
-                            .get("https://meta.fmgid.com/stations/ultra/current.json?t=${System.currentTimeMillis()}")
-                            .body<CurrentTrackResponse>()
-
-                        lastFetchedData = response.mapToMessage().also { data ->
-                            val dataString = AppJson.encodeToString(data)
-                            println("WebSocket: sending track data - ${data.title} - ${data.artist}")
-
-                            connections.forEach {
-                                it.session.outgoing.sendText(dataString)
-                            }
-                        }
-                    }
-                )
-            }
+            ClientsConnections.add(connection)
 
             try {
                 for (frame in incoming) {
@@ -85,68 +43,24 @@ fun Application.webSocket(connections: MutableSet<SocketConnection>) {
                         ParametrizedMessage.Type.USER_LOGOUT -> {
                             connection.userID = 0
                         }
-                        ParametrizedMessage.Type.UNSUBSCRIBE -> {
-                            println("WebSocket: client unsubscribed from connection ${connection.id}")
-                            close(CloseReason(CloseReason.Codes.NORMAL, "Unsubscribe"))
+                        ParametrizedMessage.Type.STATION_SELECT -> {
+                            val station = Station.get(message.params["station"]?.toInt() ?: -1)
+
+                            println("WebSocket: message STATION_SELECT - $station")
+
+                            when (station) {
+                                Station.ULTRA -> ultraFetcher.subscribe(connection)
+                                null -> ultraFetcher.unsubscribe(connection)
+                            }
                         }
                     }
                 }
             } catch (e: Exception) {
                 println("WebSocket: socket error, ${e.message}")
             } finally {
-                if (removeConnection(connections, connection)) {
-                    println("WebSocket: polling stopped")
-                    pollingJob?.cancel()
-                    pollingJob = null
-                    lastFetchedData = null
-                }
+                ultraFetcher.unsubscribe(connection)
+                ClientsConnections.remove(connection)
             }
-        }
-    }
-}
-
-/**
- * @return - should start polling
- */
-private fun addConnection(connections: MutableSet<SocketConnection>, connection: SocketConnection): Boolean {
-    connections.add(connection)
-    println("WebSocket: added connection, count = ${connections.size}")
-    return connections.size == 1
-}
-
-/**
- * @return - should stop polling
- */
-
-private fun removeConnection(connections: MutableSet<SocketConnection>, connection: SocketConnection): Boolean {
-    connections.remove(connection)
-    println("WebSocket: removed connection, count = ${connections.size}")
-    return connections.isEmpty()
-}
-
-private fun pollingJob(
-    getId: suspend () -> String,
-    fetch: suspend () -> Unit
-) = pollingScope.launch {
-    println("WebSocket: polling started")
-
-    var currentUniqueID: String? = null
-
-    while (isActive) {
-        try {
-            val fetchedUniqueID = getId()
-
-            if (fetchedUniqueID != currentUniqueID) {
-                println("WebSocket: fetching track")
-                fetch()
-                currentUniqueID = fetchedUniqueID
-            }
-
-            delay(10000)
-        } catch (e: Exception) {
-            delay(5000)
-            
-            println("WebSocket: fetching failed, ${e.message}")
         }
     }
 }

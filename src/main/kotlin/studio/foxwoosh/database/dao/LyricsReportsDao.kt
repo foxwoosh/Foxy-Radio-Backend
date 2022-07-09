@@ -1,9 +1,6 @@
 package studio.foxwoosh.database.dao
 
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.*
 import studio.foxwoosh.database.AppDatabase
 import studio.foxwoosh.database.LyricsReportDispatcher
 import studio.foxwoosh.database.tables.LyricsReport
@@ -14,10 +11,12 @@ import java.util.UUID
 interface ILyricsReportsDao {
 
     suspend fun get(reportID: String): LyricsReport?
+
+    suspend fun get(userID: Long, lyricsID: Int): LyricsReport?
     suspend fun getUserReports(userID: Long): List<LyricsReport>
     suspend fun saveReport(
         authorID: Long,
-        lyricsID: String,
+        lyricsID: Int,
         userComment: String,
         state: LyricsReportState
     ): LyricsReport
@@ -39,6 +38,13 @@ class LyricsReportsDao : ILyricsReportsDao {
             .singleOrNull()
     }
 
+    override suspend fun get(userID: Long, lyricsID: Int): LyricsReport? = AppDatabase.query(LyricsReportDispatcher) {
+        LyricsReports
+            .select { (LyricsReports.reportAuthorID eq userID) and (LyricsReports.lyricsID eq lyricsID) }
+            .map { get(it) }
+            .singleOrNull()
+    }
+
     override suspend fun getUserReports(userID: Long) = AppDatabase.query(LyricsReportDispatcher) {
         LyricsReports
             .select { LyricsReports.reportAuthorID eq userID }
@@ -47,7 +53,7 @@ class LyricsReportsDao : ILyricsReportsDao {
 
     override suspend fun saveReport(
         authorID: Long,
-        lyricsID: String,
+        lyricsID: Int,
         userComment: String,
         state: LyricsReportState
     ): LyricsReport {
