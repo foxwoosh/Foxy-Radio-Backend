@@ -24,7 +24,7 @@ fun Application.lyricsReports() {
     routing {
         authenticate {
             put("/v1/lyrics/report") {
-                val userID = call.authentication.principal<ValidatedUserPrincipal>()?.id ?: run {
+                val userID = call.principal<ValidatedUserPrincipal>()?.id ?: run {
                     call.respond(HttpStatusCode.Unauthorized)
                     return@put
                 }
@@ -37,21 +37,29 @@ fun Application.lyricsReports() {
                     state = LyricsReportState.SUBMITTED
                 )
 
-                call.respond(
-                    HttpStatusCode.OK,
-                    LyricsReportResponse(
-                        id = report.id,
-                        lyricsID = report.lyricsID,
-                        userComment = report.userComment,
-                        state = report.state,
-                        moderatorID = null,
-                        moderatorComment = null
+                call.respond(HttpStatusCode.OK)
+
+                ClientsConnections
+                    .find { it.userID == report.reportAuthorID }
+                    ?.session
+                    ?.outgoing
+                    ?.sendText(
+                        AppJson.encodeToString(
+                            LyricsReportUpdateMessage(
+                                type = MessageType.REPORT_UPDATE,
+                                reportID = report.id,
+                                authorID = report.reportAuthorID,
+                                lyricsID = report.lyricsID,
+                                state = report.state,
+                                moderatorID = report.moderatorID,
+                                moderatorComment = report.moderatorComment
+                            )
+                        )
                     )
-                )
             }
 
             patch("/v1/lyrics/report/update") {
-                val userID = call.authentication.principal<ValidatedUserPrincipal>()?.id ?: run {
+                val userID = call.principal<ValidatedUserPrincipal>()?.id ?: run {
                     call.respond(HttpStatusCode.Unauthorized)
                     return@patch
                 }

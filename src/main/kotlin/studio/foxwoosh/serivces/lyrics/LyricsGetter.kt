@@ -11,6 +11,7 @@ import org.jsoup.nodes.TextNode
 import studio.foxwoosh.utils.AppJson
 import studio.foxwoosh.database.LyricsDao
 import studio.foxwoosh.database.LyricsReportsDao
+import studio.foxwoosh.database.tables.LyricData
 import studio.foxwoosh.http_responses.LyricsResponse
 import studio.foxwoosh.serivces.auth.ValidatedUserPrincipal
 
@@ -61,6 +62,11 @@ fun Application.lyricsGetter() {
                             }
                         }
                     }
+                }
+
+                // nothing was found, saving empty lyrics in database to make it available for report
+                if (lyrics == null) {
+                    lyrics = LyricsDao.save(artist, title, "")
                 }
 
                 lyrics?.let { lyricData ->
