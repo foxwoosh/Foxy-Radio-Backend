@@ -5,13 +5,10 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.encodeToString
 import org.jsoup.Jsoup
 import org.jsoup.nodes.TextNode
-import studio.foxwoosh.utils.AppJson
 import studio.foxwoosh.database.LyricsDao
 import studio.foxwoosh.database.LyricsReportsDao
-import studio.foxwoosh.database.tables.LyricData
 import studio.foxwoosh.http_responses.LyricsResponse
 import studio.foxwoosh.serivces.auth.ValidatedUserPrincipal
 

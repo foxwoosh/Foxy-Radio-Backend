@@ -2,7 +2,6 @@ package studio.foxwoosh.serivces.socket
 
 import io.ktor.websocket.*
 import java.util.*
-import kotlin.collections.HashMap
 
 class SocketConnection(val session: DefaultWebSocketSession) {
     val id = UUID.randomUUID().toString()

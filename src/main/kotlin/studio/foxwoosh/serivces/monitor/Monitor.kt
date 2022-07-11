@@ -9,7 +9,6 @@ import studio.foxwoosh.ClientsConnections
 import studio.foxwoosh.database.UserDao
 import studio.foxwoosh.database.tables.UserRole
 import studio.foxwoosh.serivces.auth.ValidatedUserPrincipal
-import studio.foxwoosh.serivces.socket.SocketConnection
 
 fun Application.monitor() {
     routing {

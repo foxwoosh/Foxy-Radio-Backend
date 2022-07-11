@@ -9,11 +9,19 @@ import studio.foxwoosh.database.tables.LyricData
 import studio.foxwoosh.database.tables.Lyrics
 
 interface ILyricsDao {
+    suspend fun get(id: Int): LyricData?
     suspend fun get(artist: String, title: String): LyricData?
     suspend fun save(artist: String, title: String, lyrics: String): LyricData
 }
 
 class LyricsDao : ILyricsDao {
+    override suspend fun get(id: Int): LyricData? = AppDatabase.query(LyricsDispatcher) {
+        Lyrics
+            .select { Lyrics.id eq id }
+            .map { get(it) }
+            .singleOrNull()
+    }
+
     override suspend fun get(artist: String, title: String): LyricData? = AppDatabase.query(LyricsDispatcher) {
         Lyrics
             .select { Lyrics.id eq id(artist, title) }

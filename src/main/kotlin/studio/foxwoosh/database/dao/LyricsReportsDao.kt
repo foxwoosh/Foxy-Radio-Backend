@@ -6,7 +6,7 @@ import studio.foxwoosh.database.LyricsReportDispatcher
 import studio.foxwoosh.database.tables.LyricsReport
 import studio.foxwoosh.database.tables.LyricsReportState
 import studio.foxwoosh.database.tables.LyricsReports
-import java.util.UUID
+import java.util.*
 
 interface ILyricsReportsDao {
 
@@ -18,14 +18,16 @@ interface ILyricsReportsDao {
         authorID: Long,
         lyricsID: Int,
         userComment: String,
-        state: LyricsReportState
+        state: LyricsReportState,
+        createdAt: Long
     ): LyricsReport
 
     suspend fun updateReportState(
         id: String,
         state: LyricsReportState,
         moderatorID: Long,
-        moderatorComment: String
+        moderatorComment: String,
+        updatedAt: Long
     ): Boolean
 }
 
@@ -55,7 +57,8 @@ class LyricsReportsDao : ILyricsReportsDao {
         authorID: Long,
         lyricsID: Int,
         userComment: String,
-        state: LyricsReportState
+        state: LyricsReportState,
+        createdAt: Long
     ): LyricsReport {
         val id = UUID.randomUUID().toString()
 
@@ -66,6 +69,7 @@ class LyricsReportsDao : ILyricsReportsDao {
                 it[LyricsReports.lyricsID] = lyricsID
                 it[LyricsReports.userComment] = userComment
                 it[LyricsReports.state] = state.name
+                it[LyricsReports.createdAt] = createdAt
             }
         }
 
@@ -76,7 +80,9 @@ class LyricsReportsDao : ILyricsReportsDao {
             userComment = userComment,
             state = state,
             moderatorID = null,
-            moderatorComment = null
+            moderatorComment = null,
+            createdAt = createdAt,
+            updatedAt = null
         )
     }
 
@@ -84,13 +90,15 @@ class LyricsReportsDao : ILyricsReportsDao {
         id: String,
         state: LyricsReportState,
         moderatorID: Long,
-        moderatorComment: String
+        moderatorComment: String,
+        updatedAt: Long
     ): Boolean =
         AppDatabase.query(LyricsReportDispatcher) {
             LyricsReports.update({ LyricsReports.id eq id }) {
                 it[LyricsReports.state] = state.name
                 it[LyricsReports.moderatorID] = moderatorID
                 it[LyricsReports.moderatorComment] = moderatorComment
+                it[LyricsReports.updatedAt] = updatedAt
             } > 0
         }
 
@@ -102,7 +110,9 @@ class LyricsReportsDao : ILyricsReportsDao {
             userComment = row[LyricsReports.userComment],
             state = LyricsReportState.valueOf(row[LyricsReports.state]),
             moderatorID = row[LyricsReports.moderatorID],
-            moderatorComment = row[LyricsReports.moderatorComment]
+            moderatorComment = row[LyricsReports.moderatorComment],
+            createdAt = row[LyricsReports.createdAt],
+            updatedAt = row[LyricsReports.updatedAt]
         )
     }
 }
